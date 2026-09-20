@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portal del inversionista · Life City</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="crm.css">
+<style>h1.s{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:2rem}h1.s em{color:#8a4b2a}.login{margin-top:7vh;max-width:440px}.tabs2{display:flex;gap:6px;margin-bottom:6px}.tabs2 button{flex:1}</style>
+</head><body>
+
+<div class="login" id="login"><div class="card">
+  <h1 class="s">Tu inversión, <em>paso a paso.</em></h1>
+  <p style="color:var(--ink2)" id="sub">Crea tu cuenta para separar tu participación y ver tu plan de pagos.</p>
+  <div class="tabs2" style="margin-top:16px"><button class="btn p" id="t-new">Crear cuenta</button><button class="btn" id="t-in">Ya tengo cuenta</button></div>
+  <div id="f-new"><input id="n-nombre" placeholder="Nombre completo" autocomplete="name"><input id="n-doc" placeholder="Cédula / NIT"><input id="n-cel" type="tel" placeholder="Celular" autocomplete="tel"></div>
+  <input id="em" type="email" placeholder="Correo" autocomplete="username"><input id="pw" type="password" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="new-password">
+  <label style="display:flex;gap:8px;text-align:left;font-size:12px;color:var(--ink2);margin-top:10px" id="hab"><input type="checkbox" id="ok" style="width:auto;margin-top:2px"> Autorizo el tratamiento de mis datos personales para la gestión de mi inversión (Ley 1581 de 2012).</label>
+  <button class="btn p" id="go">Crear mi cuenta</button><button class="btn" id="gbtn">Continuar con Google</button>
+  <button class="btn" id="rec" style="border:0;background:none;color:var(--accent)">Olvidé mi contraseña</button>
+  <div class="err" id="lerr"></div>
+</div></div>
+
+<div id="app" class="hide">
+  <header class="top" style="background:#33211a"><b>Life City · Portal del inversionista</b><span class="sp"></span><small id="who"></small><button class="btn ghost s" id="out">Salir</button></header>
+  <main style="max-width:900px">
+    <div id="alerts"></div>
+    <div class="grid kpis" id="kpis"></div>
+    <div class="card" style="margin-bottom:14px"><h2>Avance de pagos</h2><p class="sub" id="avt"></p><div style="height:12px;background:var(--line);border-radius:99px;overflow:hidden"><div id="avb" style="height:100%;width:0;background:var(--accent);border-radius:99px"></div></div></div>
+    <div class="card tw"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2>Plan de pagos</h2><p class="sub" id="proy"></p></div><button class="btn" id="ics">📅 Agregar recordatorios a mi calendario</button></div>
+      <table><thead><tr><th>Concepto</th><th>Vence</th><th class="num">Valor</th><th>Estado</th><th></th></tr></thead><tbody id="tb"></tbody></table>
+      <div class="empty hide" id="noplan">Tu cuenta quedó creada ✅. En cuanto confirmemos tu separación, el equipo de Life City cargará aquí tu plan de pagos y te avisará.</div></div>
+    <div class="card" style="margin-top:14px"><h2>Mis datos</h2><div class="f"><label>Nombre<input id="m-nombre"></label><label>Documento<input id="m-documento"></label><label>Celular<input id="m-celular"></label><label>Proyecto de interés<input id="m-proyecto"></label></div><button class="btn" id="m-save">Guardar</button> <span id="m-ok" style="color:var(--good)"></span></div>
+    <p style="color:var(--muted);font-size:12px;margin-top:16px">Los recordatorios se muestran en este portal y, si los agregas, en tu calendario (3 días y 1 día antes de cada vencimiento). Toda inversión implica riesgos; las rentabilidades son estimadas y no garantizadas.</p>
+  </main>
+</div>
+
+<script type="module">
+import { firebaseConfig, SDK } from './firebase-config.js';
+const { initializeApp } = await import(`${SDK}/firebase-app.js`);
+const A = await import(`${SDK}/firebase-auth.js`), F = await import(`${SDK}/firebase-firestore.js`);
+const app = initializeApp(firebaseConfig), auth = A.getAuth(app), db = F.getFirestore(app);
+const $ = s => document.querySelector(s), esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => '$' + Math.round(n || 0).toLocaleString('es-CO'), today = () => new Date().toISOString().slice(0, 10);
+const fdate = d => new Date(d + 'T12:00').toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' });
+const proyectoURL = new URLSearchParams(location.search).get('proyecto') || '';
+let modo = 'new', pagos = [], perfil = {};
+const setModo = m => { modo = m; $('#f-new').classList.toggle('hide', m !== 'new'); $('#hab').classList.toggle('hide', m !== 'new'); $('#go').textContent = m === 'new' ? 'Crear mi cuenta' : 'Entrar'; $('#t-new').classList.toggle('p', m === 'new'); $('#t-in').classList.toggle('p', m !== 'new'); };
+$('#t-new').onclick = () => setModo('new'); $('#t-in').onclick = () => setModo('in');
+const fail = e => $('#lerr').textContent = ({ 'auth/email-already-in-use': 'Ese correo ya tiene cuenta. Usa "Ya tengo cuenta".', 'auth/invalid-credential': 'Correo o contraseña incorrectos.', 'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.', 'auth/unauthorized-domain': 'El acceso con Google aún no está habilitado para este sitio; usa correo y contraseña.' })[e.code] || e.message;
+let pendiente = null;
+$('#go').onclick = async () => {
+  $('#lerr').textContent = '';
+  try {
+    if (modo === 'new') {
+      if (!$('#n-nombre').value.trim() || !$('#ok').checked) return $('#lerr').textContent = 'Escribe tu nombre y autoriza el tratamiento de datos.';
+      pendiente = { nombre: $('#n-nombre').value.trim(), documento: $('#n-doc').value.trim(), celular: $('#n-cel').value.trim() };
+      const c = await A.createUserWithEmailAndPassword(auth, $('#em').value, $('#pw').value); A.sendEmailVerification(c.user).catch(() => { });
+    } else await A.signInWithEmailAndPassword(auth, $('#em').value, $('#pw').value);
+  } catch (e) { fail(e); }
+};
+$('#gbtn').onclick = () => A.signInWithPopup(auth, new A.GoogleAuthProvider()).catch(fail);
+$('#rec').onclick = () => $('#em').value ? A.sendPasswordResetEmail(auth, $('#em').value).then(() => $('#lerr').textContent = 'Te enviamos un correo para restablecerla.').catch(fail) : $('#lerr').textContent = 'Escribe tu correo arriba.';
+$('#out').onclick = () => A.signOut(auth);
+
+A.onAuthStateChanged(auth, async u => {
+  $('#login').classList.toggle('hide', !!u); $('#app').classList.toggle('hide', !u); if (!u) return;
+  $('#who').textContent = u.email; const ref = F.doc(db, 'inversionistas', u.uid), s = await F.getDoc(ref);
+  if (!s.exists()) await F.setDoc(ref, { nombre: pendiente?.nombre || u.displayName || '', celular: pendiente?.celular || '', documento: pendiente?.documento || '', correo: u.email, proyecto: proyectoURL, creado: F.serverTimestamp() });
+  F.onSnapshot(ref, d => { perfil = d.data() || {};['nombre', 'documento', 'celular', 'proyecto'].forEach(k => { if (document.activeElement !== $('#m-' + k)) $('#m-' + k).value = perfil[k] || ''; }); $('#proy').textContent = perfil.proyecto || ''; });
+  F.onSnapshot(F.collection(ref, 'pagos'), q => { pagos = q.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.vence || '').localeCompare(b.vence || '')); render(); });
+  $('#m-save').onclick = async () => { await F.updateDoc(ref, { nombre: $('#m-nombre').value, documento: $('#m-documento').value, celular: $('#m-celular').value, proyecto: $('#m-proyecto').value }); $('#m-ok').textContent = 'Guardado'; setTimeout(() => $('#m-ok').textContent = '', 2000); };
+});
+const estado = p => p.estado === 'pagado' ? ['pagado', 'Pagado'] : p.vence < today() ? ['vencido', 'Vencido'] : p.vence <= new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10) ? ['pronto', 'Vence pronto'] : ['', 'Pendiente'];
+function render() {
+  const tot = pagos.reduce((s, p) => s + (+p.valor || 0), 0), pag = pagos.filter(p => p.estado === 'pagado').reduce((s, p) => s + (+p.valor || 0), 0), nx = pagos.find(p => p.estado !== 'pagado');
+  $('#noplan').classList.toggle('hide', !!pagos.length); $('#ics').classList.toggle('hide', !pagos.length);
+  $('#kpis').innerHTML = [['Valor de tu inversión', money(tot)], ['Pagado', money(pag)], ['Saldo', money(tot - pag)], ['Próximo pago', nx ? money(nx.valor) : '—', nx ? fdate(nx.vence) : '']].map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b style="font-size:1.5rem">${b}</b><span>${c || ''}</span></div>`).join('');
+  $('#avb').style.width = (tot ? pag / tot * 100 : 0) + '%'; $('#avt').textContent = tot ? `${(pag / tot * 100).toFixed(0)} % pagado · ${pagos.filter(p => p.estado === 'pagado').length} de ${pagos.length} pagos` : 'Aún sin plan';
+  $('#tb').innerHTML = pagos.map(p => `<tr style="cursor:default"><td>${esc(p.concepto)}</td><td>${fdate(p.vence)}</td><td class="num">${money(p.valor)}</td><td><span class="chip ${estado(p)[0]}">${estado(p)[1]}</span></td><td>${p.estado !== 'pagado' && /^https:\/\/checkout\.wompi\.co\//.test(p.link || '') ? `<a class="btn s p" target="_blank" rel="noopener" href="${esc(p.link)}">Pagar con Wompi</a>` : ''}</td></tr>`).join('');
+  const v = pagos.filter(p => estado(p)[0] === 'vencido'), pr = pagos.filter(p => estado(p)[0] === 'pronto');
+  $('#alerts').innerHTML = (v.length ? `<div class="banner crit"><b>⚠ Tienes ${v.length} pago(s) vencido(s):</b> ${v.map(p => `${esc(p.concepto)} (${money(p.valor)}, venció el ${fdate(p.vence)})`).join('; ')}.</div>` : '') + (pr.length ? `<div class="banner"><b>🔔 Recordatorio:</b> ${pr.map(p => `${esc(p.concepto)} por ${money(p.valor)} vence el ${fdate(p.vence)}`).join('; ')}.</div>` : '');
+}
+$('#ics').onclick = () => {
+  const ev = pagos.filter(p => p.estado !== 'pagado').map(p => { const d = p.vence.replace(/-/g, ''), n = new Date(p.vence + 'T12:00'); n.setDate(n.getDate() + 1); const d2 = n.toISOString().slice(0, 10).replace(/-/g, ''); return ['BEGIN:VEVENT', `UID:${p.id}@lifecity-crm`, `DTSTAMP:${new Date().toISOString().replace(/[-:]|\.\d+/g, '')}`, `DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${d2}`, `SUMMARY:Pago Life City · ${p.concepto} · ${money(p.valor)}`, `DESCRIPTION:${perfil.proyecto || ''} — Ver plan y pagar: ${location.origin + location.pathname}`, 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Pago Life City en 3 días', 'TRIGGER:-P3D', 'END:VALARM', 'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Pago Life City mañana', 'TRIGGER:-P1D', 'END:VALARM', 'END:VEVENT'].join('\r\n'); });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Life City//Pagos//ES', ...ev, 'END:VCALENDAR'].join('\r\n')], { type: 'text/calendar' })); a.download = 'pagos-lifecity.ics'; a.click();
+};
+</script>
+</body></html>
