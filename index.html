@@ -19,7 +19,7 @@
 
 <div id="app" class="hide">
   <header class="top"><b>CRM Life City</b>
-    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="embudo">Embudo</button><button data-t="inv">Inversionistas y pagos</button></nav>
+    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="embudo">Embudo</button><button data-t="inv">Inversionistas y pagos</button><button data-t="rec">Recordatorios</button></nav>
     <span class="sp"></span><small id="who"></small><button class="btn ghost s" id="out">Salir</button></header>
 
   <main>
@@ -41,7 +41,19 @@
       <div class="card tw"><table><thead><tr><th>Nombre</th><th>Contacto</th><th>Proyecto</th><th>Interés</th><th>Etapa</th><th>Próx. contacto</th><th>Creado</th></tr></thead><tbody id="tb"></tbody></table><div class="empty hide" id="noleads">Aún no hay leads. Llegarán aquí cuando alguien llene el formulario de una landing.</div></div>
     </section>
 
-    <section id="v-embudo" class="hide"><p style="color:var(--ink2);margin-bottom:12px">Arrastra una tarjeta para cambiarla de etapa.</p><div class="kan" id="kan"></div></section>
+    <section id="v-embudo" class="hide"><div class="tools"><select id="kp"><option value="">Todos los proyectos</option></select><span style="color:var(--ink2)">Arrastra una tarjeta para cambiarla de etapa. Quien crea su cuenta en el portal entra solo a la columna «Inversionista».</span></div><div class="kan" id="kan"></div></section>
+
+    <section id="v-rec" class="hide">
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start">
+        <div class="card"><h2>Plantillas de recordatorio</h2><p class="sub">Una plantilla general y, si quieres, una distinta por proyecto. Se usan en los botones de WhatsApp y correo de «Inversionistas y pagos».</p>
+          <div class="f" style="grid-template-columns:1fr"><label>Proyecto<select id="r-proy"></select></label>
+          <label>Cuando el pago está por vencer<textarea id="r-pronto" rows="7"></textarea></label><label>El día del vencimiento<textarea id="r-hoy" rows="6"></textarea></label><label>Cuando ya venció<textarea id="r-vencido" rows="7"></textarea></label>
+          <label>Firma<input id="r-firma"></label></div>
+          <div class="acts"><button class="btn p" id="r-save">Guardar plantilla</button><button class="btn" id="r-reset">Restaurar predeterminada</button><span id="r-ok" style="color:var(--good);align-self:center"></span></div>
+          <p class="sub" style="margin-top:12px">Variables: <code>{saludo}</code> <code>{primer_nombre}</code> <code>{nombre}</code> <code>{proyecto}</code> <code>{concepto}</code> <code>{valor}</code> <code>{fecha}</code> <code>{dias}</code> <code>{avance}</code> <code>{saldo}</code> <code>{toque_personal}</code> <code>{link_pago}</code> <code>{portal}</code> <code>{firma}</code></p></div>
+        <div class="card"><h2>Vista previa</h2><p class="sub">Con el primer pago pendiente del proyecto elegido (o un ejemplo si aún no hay).</p><div id="r-prev" style="white-space:pre-wrap;background:#eaf6e4;border-radius:10px;padding:16px"></div>
+          <p class="sub" style="margin-top:14px"><b>El toque personal</b> se escribe en la ficha de cada inversionista: el trato («Mafe», «Don Carlos») y una frase que solo aplica a esa persona. El saludo cambia según la hora, el tono según si el pago está por vencer, vence hoy o ya venció, y el avance se calcula con sus pagos.</p></div>
+      </div></section>
 
     <section id="v-inv" class="hide">
       <div id="recs"></div>
@@ -61,7 +73,7 @@ const F = await import(`${SDK}/firebase-firestore.js`);
 const app = initializeApp(firebaseConfig), auth = A.getAuth(app), db = F.getFirestore(app);
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const ETAPAS = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['calificado', 'Calificado'], ['propuesta', 'Propuesta enviada'], ['separo', 'Separó'], ['ganado', 'Ganado'], ['perdido', 'Perdido']];
+const ETAPAS = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['calificado', 'Calificado'], ['propuesta', 'Propuesta enviada'], ['inversionista', 'Inversionista (cuenta creada)'], ['separo', 'Separó'], ['ganado', 'Ganado'], ['perdido', 'Perdido']];
 const EN = Object.fromEntries(ETAPAS), money = n => '$' + Math.round(n || 0).toLocaleString('es-CO');
 const fdate = d => d ? new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 const today = () => new Date().toISOString().slice(0, 10), tel = c => String(c || '').replace(/\D/g, '').replace(/^(?=3\d{9}$)/, '57');
@@ -83,11 +95,29 @@ A.onAuthStateChanged(auth, u => {
 let started = false;
 function start() {
   if (started) return; started = true;
-  F.onSnapshot(F.query(F.collection(db, 'leads'), F.orderBy('creado', 'desc')), s => { leads = s.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); render(); }, e => alert('No se pudieron leer los leads: ' + e.message));
-  F.onSnapshot(F.collection(db, 'inversionistas'), s => { invs = s.docs.map(d => ({ id: d.id, ...d.data() })); invs.forEach(watchPagos); renderInv(); });
+  F.onSnapshot(F.query(F.collection(db, 'leads'), F.orderBy('creado', 'desc')), s => { leads = s.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); leadsReady = true; render(); syncInv(); }, e => alert('No se pudieron leer los leads: ' + e.message));
+  F.onSnapshot(F.collection(db, 'inversionistas'), s => { invs = s.docs.map(d => ({ id: d.id, ...d.data() })); invs.forEach(watchPagos); renderInv(); syncInv(); initRec(); });
+  F.onSnapshot(F.doc(db, 'config', 'recordatorios'), d => { TPL = d.data() || {}; renderInv(); initRec(true); });
+}
+// Quien crea cuenta en el portal entra al embudo: se enlaza con su lead (por correo) o se crea uno, en la etapa «Inversionista»
+const syncing = new Set(); let leadsReady = false;
+async function syncInv() {
+  if (!leadsReady) return;
+  for (const i of invs) {
+    if (syncing.has(i.id) || !i.correo) continue; const mail = i.correo.toLowerCase();
+    const l = leads.find(x => x.uid === i.id) || leads.find(x => (x.correo || '').toLowerCase() === mail);
+    if (l && l.uid === i.id) continue;                                   // ya enlazado: no se vuelve a mover de etapa
+    syncing.add(i.id);
+    try {
+      if (!l) { const r = await F.addDoc(F.collection(db, 'leads'), { nombre: i.nombre || i.correo, celular: i.celular || '', correo: i.correo, documento: i.documento || '', proyecto: i.proyecto || '', origen: 'Portal del inversionista', etapa: 'inversionista', uid: i.id, creado: i.creado || F.serverTimestamp() }); await log(r.id, 'portal', 'Creó su cuenta en el portal del inversionista'); }
+      else { const sube = ['nuevo', 'contactado', 'calificado', 'propuesta'].includes(l.etapa || 'nuevo');
+        await F.updateDoc(F.doc(db, 'leads', l.id), { uid: i.id, ...(sube ? { etapa: 'inversionista' } : {}), ...(l.proyecto ? {} : { proyecto: i.proyecto || '' }), ...(l.documento ? {} : { documento: i.documento || '' }), actualizado: F.serverTimestamp() });
+        await log(l.id, 'portal', 'Creó su cuenta en el portal del inversionista' + (sube ? ` · etapa: ${EN[l.etapa] || 'Nuevo'} → Inversionista` : '')); }
+    } catch (e) { console.error(e); syncing.delete(i.id); }
+  }
 }
 const watching = new Set();
-function watchPagos(i) { if (watching.has(i.id)) return; watching.add(i.id); F.onSnapshot(F.collection(db, 'inversionistas', i.id, 'pagos'), s => { pagos[i.id] = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.vence || '').localeCompare(b.vence || '')); renderInv(); }); }
+function watchPagos(i) { if (watching.has(i.id)) return; watching.add(i.id); F.onSnapshot(F.collection(db, 'inversionistas', i.id, 'pagos'), s => { pagos[i.id] = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.vence || '').localeCompare(b.vence || '')); renderInv(); kanban(); }); }
 
 // ---------- Navegación
 $('#tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('#tabs button').forEach(x => x.classList.toggle('on', x === b)); $$('main>section').forEach(s => s.classList.toggle('hide', s.id !== 'v-' + b.dataset.t)); };
@@ -123,9 +153,11 @@ function table() {
   $('#tb').innerHTML = r.map(l => `<tr data-id="${l.id}"><td><b>${esc(l.nombre)}</b></td><td>${esc(l.celular)}<br><small style="color:var(--ink2)">${esc(l.correo)}</small></td><td>${esc(l.proyecto)}</td><td>${esc(l.monto)}</td><td><span class="chip ${esc(l.etapa)}">${esc(EN[l.etapa] || l.etapa)}</span></td><td>${l.proximoContacto ? fdate(l.proximoContacto + 'T12:00') : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('');
   $$('#tb tr').forEach(t => t.onclick = () => openLead(t.dataset.id));
 }
-['#q', '#fp', '#fe'].forEach(s => $(s).oninput = table);
+['#q', '#fp', '#fe'].forEach(s => $(s).oninput = table); $('#kp').onchange = kanban;
+const invBadge = uid => { const ps = pagos[uid] || [], tot = ps.reduce((s, p) => s + (+p.valor || 0), 0), pag = ps.filter(p => p.estado === 'pagado').reduce((s, p) => s + (+p.valor || 0), 0); return `<small style="margin-top:4px"><span class="chip pagado">Cuenta en portal</span> ${tot ? Math.round(pag / tot * 100) + ' % pagado' : 'sin plan aún'}</small>`; };
 function kanban() {
-  $('#kan').innerHTML = ETAPAS.map(([k, v]) => { const a = leads.filter(l => (l.etapa || 'nuevo') === k); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-id="${l.id}"><b>${esc(l.nombre)}</b><small>${esc(l.proyecto)} · ${esc(l.monto)}</small><small>${fdate(l.creado)}</small></div>`).join('')}</div>`; }).join('');
+  const kp = $('#kp').value, prs = [...new Set(leads.map(l => l.proyecto || 'Sin dato'))]; $('#kp').innerHTML = '<option value="">Todos los proyectos</option>' + prs.map(x => `<option ${x === kp ? 'selected' : ''}>${esc(x)}</option>`).join('');
+  $('#kan').innerHTML = ETAPAS.map(([k, v]) => { const a = leads.filter(l => (l.etapa || 'nuevo') === k && (!kp || (l.proyecto || 'Sin dato') === kp)); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-id="${l.id}"><b>${esc(l.nombre)}</b><small>${esc(l.proyecto)} · ${esc(l.monto)}</small><small>${fdate(l.creado)}</small>${l.uid ? invBadge(l.uid) : ''}</div>`).join('')}</div>`; }).join('');
   $$('.lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('id', c.dataset.id); c.onclick = () => openLead(c.dataset.id); });
   $$('.col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = e => { c.classList.remove('over'); setEtapa(e.dataTransfer.getData('id'), c.dataset.e); }; });
 }
@@ -159,6 +191,38 @@ const closeDr = () => { $('#dr').classList.remove('on'); unsubAct?.(); };
 $('#nuevo').onclick = async () => { const nombre = prompt('Nombre del lead'); if (!nombre) return; const r = await F.addDoc(F.collection(db, 'leads'), { nombre, etapa: 'nuevo', origen: 'Manual', proyecto: '', creado: F.serverTimestamp() }); setTimeout(() => openLead(r.id), 600); };
 $('#csv').onclick = () => { const cols = ['nombre', 'celular', 'correo', 'documento', 'ciudad', 'proyecto', 'monto', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'notas', 'mensaje']; const rows = [cols.join(','), ...filtered().map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' })); a.download = `leads-${today()}.csv`; a.click(); };
 
+// ---------- Plantillas de recordatorio
+let TPL = {};
+const DEF = {
+  pronto: '{saludo}, {primer_nombre} 👋\n\n{toque_personal}Te escribo de {proyecto}: tu pago «{concepto}» por {valor} vence el {fecha} ({dias}).\n\n{avance}\n\nPuedes pagar aquí: {link_pago}\nY ver tu plan completo en {portal}\n\nGracias por ser parte del proyecto.\n{firma}',
+  hoy: '{saludo}, {primer_nombre}.\n\n{toque_personal}Hoy vence tu pago «{concepto}» de {proyecto} por {valor}.\n\nPuedes hacerlo en un minuto aquí: {link_pago}\n\nSi ya lo hiciste, ignora este mensaje y cuéntame para registrarlo. ¡Gracias!\n{firma}',
+  vencido: '{saludo}, {primer_nombre}.\n\n{toque_personal}Notamos que tu pago «{concepto}» de {proyecto} por {valor}, que vencía el {fecha}, sigue pendiente ({dias}).\n\n{avance}\n\nSi tuviste algún inconveniente, cuéntame y lo resolvemos juntos. Puedes ponerte al día aquí: {link_pago}\n{firma}',
+  firma: 'Equipo Life City'
+};
+const tplFor = proy => ({ ...DEF, ...(TPL.general || {}), ...((TPL.proyectos || {})[proy] || {}) });
+function mensaje(i, p, t = tplFor(i.proyecto || '')) {
+  const ps = pagos[i.id] || [], tot = ps.reduce((s, x) => s + (+x.valor || 0), 0), pag = ps.filter(x => x.estado === 'pagado').reduce((s, x) => s + (+x.valor || 0), 0);
+  const dd = Math.round((new Date(p.vence + 'T12:00') - new Date(today() + 'T12:00')) / 864e5), h = new Date().getHours(), portal = 'https://proyectos-lifecity.github.io/crm/portal.html';
+  const v = { saludo: h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches', nombre: i.nombre || '', primer_nombre: i.trato || (i.nombre || '').trim().split(/\s+/)[0] || '', proyecto: i.proyecto || 'tu proyecto Life City', concepto: p.concepto, valor: money(p.valor),
+    fecha: new Date(p.vence + 'T12:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }), dias: dd === 0 ? 'hoy' : dd === 1 ? 'mañana' : dd > 0 ? `en ${dd} días` : dd === -1 ? 'desde ayer' : `hace ${-dd} días`,
+    avance: tot ? (pag ? `Ya llevas el ${Math.round(pag / tot * 100)} % de tu inversión pagada (${money(pag)} de ${money(tot)}).` : `Este es el primer pago de tu plan de ${money(tot)}.`) : '', saldo: money(tot - pag),
+    toque_personal: i.notaPersonal ? i.notaPersonal.trim() + '\n\n' : '', link_pago: /^https:\/\/checkout\.wompi\.co\//.test(p.link || '') ? p.link : portal, portal, firma: t.firma };
+  return t[dd === 0 ? 'hoy' : dd < 0 ? 'vencido' : 'pronto'].replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m).replace(/\n{3,}/g, '\n\n').trim();
+}
+let recInit = false; const RK = ['pronto', 'hoy', 'vencido', 'firma'];
+function initRec(reload) {
+  const proys = [...new Set([...invs.map(i => i.proyecto), ...leads.map(l => l.proyecto)].filter(Boolean))], cur = $('#r-proy').value;
+  $('#r-proy').innerHTML = '<option value="">General (todos los proyectos)</option>' + proys.map(x => `<option ${x === cur ? 'selected' : ''}>${esc(x)}</option>`).join('');
+  const draft = () => ({ ...DEF, ...Object.fromEntries(RK.map(k => [k, $('#r-' + k).value])) });
+  const prev = () => { const pr = $('#r-proy').value, i = invs.find(x => (!pr || x.proyecto === pr) && (pagos[x.id] || []).some(p => p.estado !== 'pagado')) || { id: '_', nombre: 'María Fernanda Gómez', trato: 'Mafe', proyecto: pr || 'Casa Alameda', notaPersonal: 'Espero que el viaje a Medellín haya salido muy bien.' };
+    const p = (pagos[i.id] || []).find(x => x.estado !== 'pagado') || { concepto: 'Cuota 2 de 6', valor: 3500000, vence: new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10) }; $('#r-prev').textContent = mensaje(i, p, draft()); };
+  const load = () => { const pr = $('#r-proy').value, t = pr ? tplFor(pr) : { ...DEF, ...(TPL.general || {}) }; RK.forEach(k => $('#r-' + k).value = t[k]); prev(); };
+  if (!recInit) { recInit = true; $('#r-proy').onchange = load; RK.forEach(k => $('#r-' + k).oninput = prev);
+    $('#r-save').onclick = async () => { const pr = $('#r-proy').value, d = Object.fromEntries(RK.map(k => [k, $('#r-' + k).value])); await F.setDoc(F.doc(db, 'config', 'recordatorios'), pr ? { proyectos: { [pr]: d } } : { general: d }, { merge: true }); $('#r-ok').textContent = 'Guardada'; setTimeout(() => $('#r-ok').textContent = '', 2000); };
+    $('#r-reset').onclick = () => { RK.forEach(k => $('#r-' + k).value = DEF[k]); prev(); }; load(); }
+  else if (reload) load();
+}
+
 // ---------- Inversionistas y pagos
 const estado = p => p.estado === 'pagado' ? ['pagado', 'Pagado'] : p.vence < today() ? ['vencido', 'Vencido'] : p.vence <= new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10) ? ['pronto', 'Vence pronto'] : ['', 'Pendiente'];
 function renderInv() {
@@ -166,17 +230,23 @@ function renderInv() {
   $('#tbi').innerHTML = invs.map(i => { const ps = pagos[i.id] || [], tot = ps.reduce((s, p) => s + (+p.valor || 0), 0), pag = ps.filter(p => p.estado === 'pagado').reduce((s, p) => s + (+p.valor || 0), 0), nx = ps.find(p => p.estado !== 'pagado'); return `<tr data-id="${i.id}"><td><b>${esc(i.nombre)}</b></td><td>${esc(i.celular)}<br><small>${esc(i.correo)}</small></td><td>${esc(i.proyecto)}</td><td class="num">${money(tot)}</td><td class="num">${money(pag)}</td><td>${nx ? `${fdate(nx.vence + 'T12:00')} · ${money(nx.valor)} <span class="chip ${estado(nx)[0]}">${estado(nx)[1]}</span>` : '—'}</td></tr>`; }).join('');
   $$('#tbi tr').forEach(t => t.onclick = () => openInv(t.dataset.id));
   const due = invs.flatMap(i => (pagos[i.id] || []).filter(p => ['vencido', 'pronto'].includes(estado(p)[0])).map(p => ({ i, p })));
-  $('#recs').innerHTML = due.length ? `<div class="banner"><b>Recordatorios de pago por enviar (${due.length})</b>${due.map(({ i, p }) => { const t = `Hola ${i.nombre}, te recordamos tu pago "${p.concepto}" de ${money(p.valor)} del proyecto ${i.proyecto || ''}, con vencimiento el ${fdate(p.vence + 'T12:00')}. Puedes ver tu plan y pagar en https://proyectos-lifecity.github.io/crm/portal.html`; return `<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><span style="flex:1">${esc(i.nombre)} · ${esc(p.concepto)} · ${money(p.valor)} · <span class="chip ${estado(p)[0]}">${estado(p)[1]}</span></span>${tel(i.celular) ? `<a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${tel(i.celular)}?text=${encodeURIComponent(t)}">WhatsApp</a>` : ''}<a class="btn s" href="mailto:${esc(i.correo)}?subject=${encodeURIComponent('Recordatorio de pago · Life City')}&body=${encodeURIComponent(t)}">Correo</a></div>`; }).join('')}</div>` : '';
+  $('#recs').innerHTML = due.length ? `<div class="banner"><b>Recordatorios de pago por enviar (${due.length})</b> · el mensaje sale de la plantilla del proyecto, con el nombre, el monto y el toque personal de cada persona.${due.map(({ i, p }, k) => `<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><span style="flex:1;min-width:240px">${esc(i.nombre)} · ${esc(i.proyecto)} · ${esc(p.concepto)} · ${money(p.valor)} · <span class="chip ${estado(p)[0]}">${estado(p)[1]}</span>${p.recordado ? ` <small style="color:var(--ink2)">último recordatorio: ${fdate(p.recordado + 'T12:00')}${p.recordatorios > 1 ? ' (van ' + p.recordatorios + ')' : ''}</small>` : ''}</span><button class="btn s" data-rk="${k}" data-via="ver">Ver mensaje</button>${tel(i.celular) ? `<button class="btn s" data-rk="${k}" data-via="wa">WhatsApp</button>` : ''}<button class="btn s" data-rk="${k}" data-via="mail">Correo</button><button class="btn s" data-rk="${k}" data-via="copy">Copiar</button></div>`).join('')}</div>` : '';
+  $$('#recs [data-rk]').forEach(b => b.onclick = async () => {
+    const { i, p } = due[+b.dataset.rk], t = mensaje(i, p), via = b.dataset.via; if (via === 'ver') return alert(t);
+    if (via === 'wa') window.open(`https://wa.me/${tel(i.celular)}?text=${encodeURIComponent(t)}`, '_blank'); else if (via === 'mail') location.href = `mailto:${i.correo}?subject=${encodeURIComponent(`Recordatorio de pago · ${i.proyecto || 'Life City'}`)}&body=${encodeURIComponent(t)}`; else await navigator.clipboard.writeText(t);
+    await F.updateDoc(F.doc(db, 'inversionistas', i.id, 'pagos', p.id), { recordado: today(), recordatorios: (p.recordatorios || 0) + 1 });
+    const l = leads.find(x => x.uid === i.id); if (l) log(l.id, 'recordatorio', `Recordatorio de «${p.concepto}» (${money(p.valor)}) por ${via === 'wa' ? 'WhatsApp' : via === 'mail' ? 'correo' : 'texto copiado'}`);
+  });
 }
 function openInv(id) {
   const i = invs.find(x => x.id === id), ps = pagos[id] || [];
   $('#dr').innerHTML = `<button class="btn s x">✕</button><h2>${esc(i.nombre)}</h2><small style="color:var(--ink2)">${esc(i.correo)} · ${esc(i.celular)} · doc. ${esc(i.documento)}</small>
-  <div class="f"><label>Proyecto<input id="i-proyecto" value="${esc(i.proyecto)}"></label><label>Participaciones<input id="i-participaciones" type="number" value="${esc(i.participaciones)}"></label><label class="w">Notas internas<textarea id="i-notas" rows="2">${esc(i.notas)}</textarea></label></div><button class="btn" id="i-save">Guardar datos</button>
+  <div class="f"><label>Proyecto<input id="i-proyecto" value="${esc(i.proyecto)}"></label><label>Participaciones<input id="i-participaciones" type="number" value="${esc(i.participaciones)}"></label><label>Cómo le decimos (trato)<input id="i-trato" value="${esc(i.trato)}" placeholder="Ej.: Mafe, Don Carlos"></label><label class="w">Toque personal para sus recordatorios<textarea id="i-notaPersonal" rows="2" placeholder="Una frase solo para esta persona. Ej.: Espero que el viaje a Medellín haya salido muy bien.">${esc(i.notaPersonal)}</textarea></label><label class="w">Notas internas<textarea id="i-notas" rows="2">${esc(i.notas)}</textarea></label></div><button class="btn" id="i-save">Guardar datos</button>
   <h2 style="margin-top:20px">Plan de pagos</h2><div class="tw"><table><thead><tr><th>Concepto</th><th>Vence</th><th class="num">Valor</th><th>Estado</th><th></th></tr></thead><tbody>${ps.map(p => `<tr style="cursor:default"><td>${esc(p.concepto)}</td><td>${fdate(p.vence + 'T12:00')}</td><td class="num">${money(p.valor)}</td><td><span class="chip ${estado(p)[0]}">${estado(p)[1]}</span></td><td style="white-space:nowrap"><button class="btn s" data-tog="${p.id}">${p.estado === 'pagado' ? 'Desmarcar' : 'Marcar pagado'}</button> <button class="btn s" data-rm="${p.id}">✕</button></td></tr>`).join('') || '<tr><td colspan="5" class="empty">Sin plan todavía</td></tr>'}</tbody></table></div>
   <h2 style="margin-top:18px">Generar plan</h2><div class="f"><label>Valor total (COP)<input id="g-total" type="number"></label><label>Separación ya pagada (COP)<input id="g-sep" type="number" value="0"></label><label>Cuota inicial (%)<input id="g-ini" type="number" value="30"></label><label>N.º de cuotas mensuales<input id="g-n" type="number" value="6"></label><label>Primera fecha<input id="g-f" type="date" value="${today()}"></label><label>Link de pago Wompi (opcional)<input id="g-link" placeholder="https://checkout.wompi.co/l/…"></label></div><button class="btn p" id="g-go">Crear plan</button>
   <h2 style="margin-top:18px">Pago individual</h2><div class="f" style="grid-template-columns:1fr 130px 130px auto;align-items:end"><label>Concepto<input id="p-c"></label><label>Vence<input id="p-v" type="date"></label><label>Valor<input id="p-val" type="number"></label><button class="btn" id="p-add">Agregar</button></div>`;
   $('#dr').classList.add('on'); $('#dr .x').onclick = closeDr; const col = F.collection(db, 'inversionistas', id, 'pagos'), re = () => setTimeout(() => openInv(id), 500);
-  $('#i-save').onclick = async () => { await F.updateDoc(F.doc(db, 'inversionistas', id), { proyecto: $('#i-proyecto').value, participaciones: +$('#i-participaciones').value || 0, notas: $('#i-notas').value }); re(); };
+  $('#i-save').onclick = async () => { await F.updateDoc(F.doc(db, 'inversionistas', id), { proyecto: $('#i-proyecto').value, participaciones: +$('#i-participaciones').value || 0, notas: $('#i-notas').value, trato: $('#i-trato').value.trim(), notaPersonal: $('#i-notaPersonal').value.trim() }); re(); };
   $$('[data-tog]').forEach(b => b.onclick = async () => { const p = ps.find(x => x.id === b.dataset.tog); await F.updateDoc(F.doc(col, p.id), p.estado === 'pagado' ? { estado: 'pendiente', pagadoEl: null } : { estado: 'pagado', pagadoEl: today() }); re(); });
   $$('[data-rm]').forEach(b => b.onclick = async () => { if (confirm('¿Quitar este pago del plan?')) { await F.deleteDoc(F.doc(col, b.dataset.rm)); re(); } });
   $('#p-add').onclick = async () => { if (!$('#p-c').value || !$('#p-v').value) return; await F.addDoc(col, { concepto: $('#p-c').value, vence: $('#p-v').value, valor: +$('#p-val').value || 0, estado: 'pendiente' }); re(); };

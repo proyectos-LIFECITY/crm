@@ -46,3 +46,5 @@ th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2
 .empty{color:var(--muted);padding:30px;text-align:center}.hide{display:none!important}
 .banner{padding:12px 16px;border-radius:10px;border:1px solid #f0d9a6;background:#fdf5e1;margin-bottom:14px}
 .banner.crit{border-color:#eab4b4;background:#fcebeb}
+
+.chip.inversionista::before{background:#1baf7a}code{background:#eceae4;padding:1px 6px;border-radius:5px;font-size:12px}textarea{font-family:inherit}
