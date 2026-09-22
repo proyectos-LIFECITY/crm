@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cotiza tu proyecto · Life City BIM</title>
+<meta name="description" content="Diseño constructivo, coordinación BIM y gestión de activos. Cuéntanos tu proyecto y te enviamos una propuesta.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="crm.css">
+<style>body{background:#eef1ea}.box{max-width:640px;margin:6vh auto;padding:0 16px}.card{padding:32px}h1{font-size:1.6rem;line-height:1.15}p.i{color:var(--ink2);margin:8px 0 18px}
+.serv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 4px}.serv label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer;font-size:13px;text-transform:none;letter-spacing:0}.serv input{width:auto}
+.serv label:has(input:checked){border-color:var(--brand);background:#eef3ea}@media(max-width:520px){.serv{grid-template-columns:1fr}}
+.f{grid-template-columns:1fr 1fr}.ok{text-align:center;padding:30px 10px}.ok h2{font-size:1.4rem;margin-bottom:8px}</style>
+</head><body>
+<div class="box"><div class="card">
+<small style="letter-spacing:.14em;text-transform:uppercase;color:#8a4b2a;font-weight:600">Life City · BIM Management Hub</small>
+<h1 style="margin-top:8px">Cuéntanos tu proyecto y te enviamos una propuesta.</h1>
+<p class="i">Diseño arquitectónico, estructural y MEP · Coordinación BIM y detección de interferencias · Cantidades y presupuesto 5D · Gestión de activos y facility management · Escaneo y nube de puntos.</p>
+<form id="f">
+  <label style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2)">¿Qué necesitas?</label>
+  <div class="serv" id="serv"></div>
+  <div class="f"><label>Empresa o cliente<input name="empresa" required></label><label>Tu nombre<input name="contacto" required autocomplete="name"></label>
+  <label>Cargo<input name="cargo"></label><label>Ciudad<input name="ciudad"></label>
+  <label>Celular / WhatsApp<input name="celular" type="tel" required minlength="7" autocomplete="tel"></label><label>Correo<input name="correo" type="email" required autocomplete="email"></label>
+  <label>Nombre del proyecto<input name="proyecto"></label><label>Tipo (vivienda, industrial, salud…)<input name="tipo"></label>
+  <label>Área aproximada (m²)<input name="area" type="number" min="0"></label><label>Disciplinas (ARQ, EST, MEP…)<input name="disciplinas"></label>
+  <label class="w">Cuéntanos más (etapa, plazos, entregables)<textarea name="mensaje" rows="3"></textarea></label></div>
+  <label class="check" style="font-size:12px;color:var(--ink2);display:flex;gap:8px;margin-bottom:14px"><input type="checkbox" required style="width:auto;margin-top:3px"> Autorizo el tratamiento de mis datos para ser contactado sobre esta solicitud (Ley 1581 de 2012).</label>
+  <button class="btn p" type="submit" style="width:100%;justify-content:center;padding:13px">Solicitar propuesta</button>
+  <div class="err" id="msg" style="text-align:center"></div>
+</form>
+</div></div>
+<script type="module">
+import { guardarLeadBim, SERVICIOS } from './lead.js';
+const q = new URLSearchParams(location.search), pre = q.get('servicio') || '';
+document.getElementById('serv').innerHTML = SERVICIOS.map(s => `<label><input type="radio" name="servicio" value="${s}" ${s === pre ? 'checked' : ''}> ${s}</label>`).join('');
+const f = document.getElementById('f'), msg = document.getElementById('msg');
+f.onsubmit = async e => { e.preventDefault(); const d = Object.fromEntries(new FormData(f)); if (!d.servicio) return msg.textContent = 'Elige un servicio.'; msg.textContent = 'Enviando…';
+  try { await guardarLeadBim(d); f.parentElement.innerHTML = `<div class="ok"><h2>¡Gracias, ${d.contacto.split(' ')[0].replace(/[<>&]/g, '')}!</h2><p style="color:var(--ink2)">Recibimos tu solicitud de <b>${d.servicio}</b>. Un especialista de Life City te contactará para agendar una reunión y preparar la propuesta.</p></div>`; }
+  catch (err) { console.error(err); msg.textContent = 'No pudimos registrar tu solicitud. Intenta de nuevo o escríbenos a proyectos@lifecity.com.co.'; } };
+</script></body></html>

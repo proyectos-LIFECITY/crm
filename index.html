@@ -19,7 +19,7 @@
 
 <div id="app" class="hide">
   <header class="top"><b>CRM Life City</b>
-    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="embudo">Embudo</button><button data-t="inv">Inversionistas y pagos</button><button data-t="rec">Recordatorios</button></nav>
+    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="embudo">Embudo</button><button data-t="inv">Inversionistas y pagos</button><button data-t="rec">Recordatorios</button><button data-t="bim" style="margin-left:10px;border-left:1px solid rgba(255,255,255,.25);border-radius:0 99px 99px 0">Coordinación y diseño</button></nav>
     <span class="sp"></span><small id="who"></small><button class="btn ghost s" id="out">Salir</button></header>
 
   <main>
@@ -54,6 +54,21 @@
         <div class="card"><h2>Vista previa</h2><p class="sub">Con el primer pago pendiente del proyecto elegido (o un ejemplo si aún no hay).</p><div id="r-prev" style="white-space:pre-wrap;background:#eaf6e4;border-radius:10px;padding:16px"></div>
           <p class="sub" style="margin-top:14px"><b>El toque personal</b> se escribe en la ficha de cada inversionista: el trato («Mafe», «Don Carlos») y una frase que solo aplica a esa persona. El saludo cambia según la hora, el tono según si el pago está por vencer, vence hoy o ya venció, y el avance se calcula con sus pagos.</p></div>
       </div></section>
+
+    <section id="v-bim" class="hide">
+      <div class="tools"><b style="font-size:1.05rem">Diseño constructivo · Coordinación BIM · Gestión de activos</b><span class="sp" style="flex:1"></span>
+        <select id="b-fs"><option value="">Todos los servicios</option></select><select id="b-fe"><option value="">Todas las etapas</option></select><input id="b-q" placeholder="Buscar empresa, contacto, proyecto…" style="min-width:220px">
+        <button class="btn" id="b-csv">Exportar CSV</button><button class="btn" id="b-form">Formulario público</button><button class="btn p" id="b-nuevo">+ Lead</button></div>
+      <div class="grid kpis" id="b-kpis"></div>
+      <div class="grid charts" style="margin-bottom:14px">
+        <div class="card"><h2>Embudo</h2><p class="sub">Oportunidades por etapa</p><div id="b-etapa"></div></div>
+        <div class="card"><h2>Por servicio</h2><p class="sub">Oportunidades abiertas y valor cotizado</p><div id="b-serv"></div></div>
+        <div class="card"><h2>Valor ganado por mes</h2><p class="sub">Últimos 12 meses · COP</p><div id="b-mes"></div></div>
+        <div class="card"><h2>Origen</h2><p class="sub">De dónde llegan</p><div id="b-orig"></div></div>
+      </div>
+      <div class="kan" id="b-kan"></div>
+      <div class="card tw" style="margin-top:14px"><table><thead><tr><th>Empresa / contacto</th><th>Servicio</th><th>Proyecto</th><th class="num">m²</th><th class="num">Valor cotizado</th><th>Etapa</th><th>Próx. contacto</th><th>Creado</th></tr></thead><tbody id="b-tb"></tbody></table><div class="empty hide" id="b-none">Aún no hay oportunidades. Llegan desde el formulario público o con «+ Lead».</div></div>
+    </section>
 
     <section id="v-inv" class="hide">
       <div id="recs"></div>
@@ -94,7 +109,7 @@ A.onAuthStateChanged(auth, u => {
 // ---------- Datos en vivo
 let started = false;
 function start() {
-  if (started) return; started = true;
+  if (started) return; started = true; startBim();
   F.onSnapshot(F.query(F.collection(db, 'leads'), F.orderBy('creado', 'desc')), s => { leads = s.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); leadsReady = true; render(); syncInv(); }, e => alert('No se pudieron leer los leads: ' + e.message));
   F.onSnapshot(F.collection(db, 'inversionistas'), s => { invs = s.docs.map(d => ({ id: d.id, ...d.data() })); invs.forEach(watchPagos); renderInv(); syncInv(); initRec(); });
   F.onSnapshot(F.doc(db, 'config', 'recordatorios'), d => { TPL = d.data() || {}; renderInv(); initRec(true); });
@@ -190,6 +205,63 @@ function openLead(id) {
 const closeDr = () => { $('#dr').classList.remove('on'); unsubAct?.(); };
 $('#nuevo').onclick = async () => { const nombre = prompt('Nombre del lead'); if (!nombre) return; const r = await F.addDoc(F.collection(db, 'leads'), { nombre, etapa: 'nuevo', origen: 'Manual', proyecto: '', creado: F.serverTimestamp() }); setTimeout(() => openLead(r.id), 600); };
 $('#csv').onclick = () => { const cols = ['nombre', 'celular', 'correo', 'documento', 'ciudad', 'proyecto', 'monto', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'notas', 'mensaje']; const rows = [cols.join(','), ...filtered().map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' })); a.download = `leads-${today()}.csv`; a.click(); };
+
+// ---------- Coordinación y diseño (línea BIM)
+const BE = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['reunion', 'Reunión / levantamiento'], ['propuesta', 'Propuesta enviada'], ['negociacion', 'Negociación'], ['ganado', 'Ganado'], ['perdido', 'Perdido']], BEN = Object.fromEntries(BE);
+const SERV = ['Diseño arquitectónico', 'Diseño estructural', 'Diseño MEP', 'Coordinación BIM', 'Modelado BIM / as-built', 'Cantidades y presupuesto 5D', 'Gestión de activos / facility', 'Escaneo y nube de puntos', 'Otro'];
+let bim = [];
+function startBim() {
+  F.onSnapshot(F.query(F.collection(db, 'leadsBim'), F.orderBy('creado', 'desc')), q => { bim = q.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); renderBim(); }, e => console.error(e));
+  $('#b-fs').innerHTML += SERV.map(x => `<option>${x}</option>`).join(''); $('#b-fe').innerHTML += BE.map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  ['#b-q', '#b-fs', '#b-fe'].forEach(x => $(x).oninput = renderBim);
+  $('#b-nuevo').onclick = async () => { const empresa = prompt('Empresa o cliente'); if (!empresa) return; const r = await F.addDoc(F.collection(db, 'leadsBim'), { empresa, etapa: 'nuevo', origen: 'Manual', servicio: '', creado: F.serverTimestamp() }); setTimeout(() => openBim(r.id), 600); };
+  $('#b-form').onclick = () => { const u = location.origin + location.pathname.replace(/index\.html$/, '') + 'bim.html'; navigator.clipboard?.writeText(u); alert('Formulario público para tu web o redes:\n' + u + '\n\n(copiado al portapapeles)'); };
+  $('#b-csv').onclick = () => { const cols = ['empresa', 'contacto', 'cargo', 'celular', 'correo', 'servicio', 'proyecto', 'tipo', 'ciudad', 'area', 'disciplinas', 'etapa', 'valor', 'responsable', 'proximoContacto', 'origen', 'mensaje', 'notas']; const rows = [cols.join(','), ...filtBim().map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' })); a.download = `bim-${today()}.csv`; a.click(); };
+}
+const filtBim = () => { const q = $('#b-q').value.toLowerCase(), sv = $('#b-fs').value, e = $('#b-fe').value; return bim.filter(l => (!sv || l.servicio === sv) && (!e || (l.etapa || 'nuevo') === e) && (!q || [l.empresa, l.contacto, l.proyecto, l.correo].join(' ').toLowerCase().includes(q))); };
+function renderBim() {
+  const open_ = bim.filter(l => !['ganado', 'perdido'].includes(l.etapa)), won = bim.filter(l => l.etapa === 'ganado'), cerr = bim.filter(l => ['ganado', 'perdido'].includes(l.etapa));
+  const sum = a => a.reduce((s, l) => s + (+l.valor || 0), 0), venc = open_.filter(l => l.proximoContacto && l.proximoContacto <= today());
+  $('#b-kpis').innerHTML = [['Oportunidades abiertas', open_.length, ''], ['Valor en negociación', money(sum(open_)), 'suma de lo cotizado'], ['Ganadas (12 meses)', won.filter(l => l.creado > Date.now() - 365 * 864e5).length, money(sum(won.filter(l => l.creado > Date.now() - 365 * 864e5)))],
+    ['Tasa de cierre', cerr.length ? Math.round(won.length / cerr.length * 100) + ' %' : '—', `${won.length} de ${cerr.length} cerradas`], ['Seguimientos vencidos', venc.length, 'próximo contacto ≤ hoy'], ['m² en gestión', open_.reduce((s, l) => s + (+l.area || 0), 0).toLocaleString('es-CO'), 'área de los proyectos abiertos']]
+    .map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${c}</span></div>`).join('');
+  hbars('#b-etapa', BE.map(([k, v]) => [v, bim.filter(l => (l.etapa || 'nuevo') === k).length]));
+  hbars('#b-serv', SERV.map(sv => [sv, open_.filter(l => l.servicio === sv).length, `${open_.filter(l => l.servicio === sv).length} abiertas · ${money(sum(open_.filter(l => l.servicio === sv)))}`]).filter(r => r[1]));
+  hbars('#b-orig', count(bim, l => l.origen));
+  const months = [...Array(12)].map((_, i) => { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); d.setMonth(d.getMonth() - 11 + i); return d; });
+  const mv = months.map((d, i) => sum(won.filter(l => { const t = l.ganadoEl ? new Date(l.ganadoEl + 'T12:00') : l.creado; return t >= d && t < (months[i + 1] || Infinity); }))), mx = Math.max(1, ...mv);
+  $('#b-mes').innerHTML = `<div class="vb">${mv.map((v, i) => `<div data-t="${months[i].toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })}: ${money(v)}"><i style="height:${v / mx * 100}%"></i></div>`).join('')}</div><div class="vbx">${months.map((d, i) => `<span>${i % 2 ? '' : d.toLocaleDateString('es-CO', { month: 'short' })}</span>`).join('')}</div>`;
+  const r = filtBim(); $('#b-none').classList.toggle('hide', !!bim.length);
+  $('#b-tb').innerHTML = r.map(l => `<tr data-id="${l.id}"><td><b>${esc(l.empresa)}</b><br><small style="color:var(--ink2)">${esc(l.contacto)}${l.cargo ? ' · ' + esc(l.cargo) : ''}</small></td><td>${esc(l.servicio)}</td><td>${esc(l.proyecto)}${l.tipo ? `<br><small style="color:var(--ink2)">${esc(l.tipo)}</small>` : ''}</td><td class="num">${l.area ? (+l.area).toLocaleString('es-CO') : '—'}</td><td class="num">${l.valor ? money(l.valor) : '—'}</td><td><span class="chip ${esc(l.etapa)}">${esc(BEN[l.etapa] || l.etapa)}</span></td><td>${l.proximoContacto ? fdate(l.proximoContacto + 'T12:00') : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('');
+  $$('#b-tb tr').forEach(t => t.onclick = () => openBim(t.dataset.id));
+  $('#b-kan').innerHTML = BE.map(([k, v]) => { const a = r.filter(l => (l.etapa || 'nuevo') === k); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}${sum(a) ? ' · ' + money(sum(a)) : ''}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-id="${l.id}"><b>${esc(l.empresa)}</b><small>${esc(l.servicio || 'Sin servicio')}${l.proyecto ? ' · ' + esc(l.proyecto) : ''}</small><small>${l.valor ? money(l.valor) : ''} ${l.area ? '· ' + (+l.area).toLocaleString('es-CO') + ' m²' : ''}</small></div>`).join('')}</div>`; }).join('');
+  $$('#b-kan .lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('bid', c.dataset.id); c.onclick = () => openBim(c.dataset.id); });
+  $$('#b-kan .col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = async e => { c.classList.remove('over'); const id = e.dataTransfer.getData('bid'), l = bim.find(x => x.id === id); if (!l || l.etapa === c.dataset.e) return; await F.updateDoc(F.doc(db, 'leadsBim', id), { etapa: c.dataset.e, ...(c.dataset.e === 'ganado' ? { ganadoEl: today() } : {}), actualizado: F.serverTimestamp() }); logB(id, 'etapa', `Etapa: ${BEN[l.etapa] || l.etapa} → ${BEN[c.dataset.e]}`); }; });
+}
+const logB = (id, tipo, texto) => F.addDoc(F.collection(db, 'leadsBim', id, 'actividades'), { tipo, texto, fecha: F.serverTimestamp(), autor: me.email });
+function openBim(id) {
+  const l = bim.find(x => x.id === id); if (!l) return; const w = tel(l.celular), FB = ['empresa', 'contacto', 'cargo', 'celular', 'correo', 'nit', 'ciudad', 'proyecto', 'tipo', 'area', 'disciplinas', 'software', 'valor', 'responsable', 'proximoContacto', 'notas', 'motivoPerdida'];
+  $('#dr').innerHTML = `<button class="btn s x">✕</button><h2>${esc(l.empresa)}</h2><small style="color:var(--ink2)">${esc(l.servicio || 'Sin servicio')} · llegó ${fdate(l.creado)} por ${esc(l.origen)}</small>
+  <div class="acts">${w ? `<a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${w}" data-log="whatsapp">WhatsApp</a><a class="btn s" href="tel:+${w}" data-log="llamada">Llamar</a>` : ''}${l.correo ? `<a class="btn s" href="mailto:${esc(l.correo)}" data-log="correo">Correo</a>` : ''}</div>
+  ${l.mensaje ? `<div class="card" style="background:#f7f6f2"><small style="color:var(--ink2)">Mensaje del formulario</small><br>${esc(l.mensaje)}</div>` : ''}
+  <div class="f"><label>Empresa / cliente<input id="b-empresa" value="${esc(l.empresa)}"></label><label>NIT / documento<input id="b-nit" value="${esc(l.nit)}"></label>
+  <label>Contacto<input id="b-contacto" value="${esc(l.contacto)}"></label><label>Cargo<input id="b-cargo" value="${esc(l.cargo)}"></label>
+  <label>Celular<input id="b-celular" value="${esc(l.celular)}"></label><label>Correo<input id="b-correo" value="${esc(l.correo)}"></label>
+  <label>Servicio<select id="b-servicio">${['', ...SERV].map(x => `<option ${x === (l.servicio || '') ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label>Etapa<select id="b-etapa">${BE.map(([k, v]) => `<option value="${k}" ${k === (l.etapa || 'nuevo') ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+  <label>Proyecto<input id="b-proyecto" value="${esc(l.proyecto)}"></label><label>Tipo (vivienda, industrial, salud…)<input id="b-tipo" value="${esc(l.tipo)}"></label>
+  <label>Ciudad<input id="b-ciudad" value="${esc(l.ciudad)}"></label><label>Área (m²)<input id="b-area" type="number" value="${esc(l.area)}"></label>
+  <label>Disciplinas (ARQ, EST, MEP…)<input id="b-disciplinas" value="${esc(l.disciplinas)}"></label><label>Software / entregables<input id="b-software" value="${esc(l.software)}" placeholder="Revit, IFC, Navisworks…"></label>
+  <label>Valor cotizado (COP)<input id="b-valor" type="number" value="${esc(l.valor)}"></label><label>Responsable<input id="b-responsable" value="${esc(l.responsable)}"></label>
+  <label>Próximo contacto<input id="b-proximoContacto" type="date" value="${esc(l.proximoContacto)}"></label><label>Motivo de pérdida<input id="b-motivoPerdida" value="${esc(l.motivoPerdida)}"></label>
+  <label class="w">Notas<textarea id="b-notas" rows="3">${esc(l.notas)}</textarea></label></div>
+  <div class="acts"><button class="btn p" id="b-save">Guardar</button><button class="btn" id="b-del" style="margin-left:auto;color:var(--crit)">Eliminar</button></div>
+  <h2 style="margin-top:18px">Bitácora</h2><div class="f" style="grid-template-columns:140px 1fr auto;align-items:end"><label>Tipo<select id="ba-tipo"><option>llamada</option><option>whatsapp</option><option>correo</option><option>reunión</option><option>visita</option><option>cotización</option><option>nota</option></select></label><label>Qué pasó<input id="ba-texto"></label><button class="btn" id="ba-add">Agregar</button></div><div class="tl" id="b-tl"></div>`;
+  $('#dr').classList.add('on'); $('#dr .x').onclick = closeDr; $$('#dr [data-log]').forEach(a => a.onclick = () => logB(id, a.dataset.log, 'Contacto iniciado desde el CRM'));
+  $('#b-save').onclick = async () => { const d = {}; FB.forEach(k => d[k] = $('#b-' + k).value); d.servicio = $('#b-servicio').value; d.etapa = $('#b-etapa').value; d.valor = +d.valor || 0; d.area = +d.area || 0; d.actualizado = F.serverTimestamp(); if (d.etapa === 'ganado' && !l.ganadoEl) d.ganadoEl = today(); if (d.etapa !== (l.etapa || 'nuevo')) await logB(id, 'etapa', `Etapa: ${BEN[l.etapa] || 'Nuevo'} → ${BEN[d.etapa]}`); await F.updateDoc(F.doc(db, 'leadsBim', id), d); closeDr(); };
+  $('#b-del').onclick = async () => { if (confirm('¿Eliminar esta oportunidad?')) { await F.deleteDoc(F.doc(db, 'leadsBim', id)); closeDr(); } };
+  $('#ba-add').onclick = async () => { const t = $('#ba-texto').value.trim(); if (!t) return; await logB(id, $('#ba-tipo').value, t); $('#ba-texto').value = ''; };
+  unsubAct?.(); unsubAct = F.onSnapshot(F.query(F.collection(db, 'leadsBim', id, 'actividades'), F.orderBy('fecha', 'desc')), q => $('#b-tl').innerHTML = q.docs.map(d => { const a = d.data(); return `<div><b>${esc(a.tipo)}</b> · ${esc(a.texto)}<small>${a.fecha?.toDate?.().toLocaleString('es-CO') || ''} · ${esc(a.autor)}</small></div>`; }).join('') || '<small>Sin actividad registrada.</small>');
+}
 
 // ---------- Plantillas de recordatorio
 let TPL = {};

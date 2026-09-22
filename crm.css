@@ -48,3 +48,5 @@ th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2
 .banner.crit{border-color:#eab4b4;background:#fcebeb}
 
 .chip.inversionista::before{background:#1baf7a}code{background:#eceae4;padding:1px 6px;border-radius:5px;font-size:12px}textarea{font-family:inherit}
+
+.chip.reunion::before,.chip.contactado::before,.chip.calificado::before{background:#eda100}.chip.propuesta::before,.chip.negociacion::before{background:#4a3aa7}
