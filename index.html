@@ -105,7 +105,8 @@ const fdate = d => d ? new Date(d).toLocaleDateString('es-CO', { day: '2-digit',
 const today = () => new Date().toISOString().slice(0, 10), tel = c => String(c || '').replace(/\D/g, '').replace(/^(?=3\d{9}$)/, '57');
 let leads = [], bim = [], ALL = [], invs = [], pagos = {}, me;
 // Segmentación: en qué está interesado cada contacto
-const INTERESES = ['Inversión inmobiliaria', 'Diseño y coordinación BIM', 'Sales App / IA', 'Otro'];
+const INTERESES = ['Inversión inmobiliaria', 'Diseño y coordinación BIM', 'Sales App / IA', 'Gerentes y dueños de negocio (MOF)', 'Formación BIM (curso Revit)', 'Software BIM (Trimble / ID Element)', 'Red de profesionales BIM', 'Contratistas (EE. UU.)', 'Sin clasificar', 'Otro'];
+const intereses = () => [...INTERESES, ...new Set(ALL.map(l => l.interes).filter(i => i && !INTERESES.includes(i)))];   // también los que se escriban a mano
 const SERV = ['Diseño arquitectónico', 'Diseño estructural', 'Diseño MEP', 'Coordinación BIM', 'Modelado BIM / as-built', 'Cantidades y presupuesto 5D', 'Gestión de activos / facility', 'Escaneo y nube de puntos', 'Otro'];
 const interesDe = l => l.interes || (l._col === 'leads' ? 'Inversión inmobiliaria' : /sales app/i.test(l.tipo || '') ? 'Sales App / IA' : 'Diseño y coordinación BIM');
 const detalle = l => l._col === 'leads' ? (l.proyecto || '') : [l.servicio && l.servicio !== 'Otro' ? l.servicio : '', l.proyecto].filter(Boolean).join(' · ') || l.tipo || '';
@@ -187,7 +188,7 @@ function render() {
     .map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${c}</span></div>`).join('');
   hbars('#c-etapa', ETAPAS.map(([k, v]) => [v, ALL.filter(l => (l.etapa || 'nuevo') === k).length]));
   hbars('#c-proy', count(ALL, l => l.interes)); hbars('#c-orig', count(ALL, l => l.origen));
-  hbars('#c-conv', INTERESES.map(p => { const a = ALL.filter(l => l.interes === p), w = a.filter(l => ['separo', 'ganado'].includes(l.etapa)).length; return [p, a.length ? w / a.length * 100 : 0, `${w} de ${a.length}`]; }).filter((r, i) => ALL.some(l => l.interes === INTERESES[i])), v => v.toFixed(0) + ' %');
+  hbars('#c-conv', intereses().map(p => { const a = ALL.filter(l => l.interes === p), w = a.filter(l => ['separo', 'ganado'].includes(l.etapa)).length; return [p, a.length ? w / a.length * 100 : 0, `${w} de ${a.length}`]; }).filter(r => ALL.some(l => l.interes === r[0])), v => v.toFixed(0) + ' %');
   // semanas
   const weeks = [...Array(12)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay() + 1 - 7 * (11 - i)); return d; });
   const wc = weeks.map((d, i) => ALL.filter(l => l.creado >= d && l.creado < (weeks[i + 1] || Infinity)).length), mx = Math.max(1, ...wc);
@@ -195,13 +196,13 @@ function render() {
   $('#c-seg').innerHTML = venc.length ? venc.slice(0, 8).map(l => `<div class="hb" style="grid-template-columns:1fr auto;cursor:pointer" data-k="${l.k}"><span><b style="color:var(--ink)">${esc(l.nombre || l.empresa)}</b> · ${esc(detalle(l) || l.interes)}</span><em style="width:auto">${fdate(l.proximoContacto + 'T12:00')}</em></div>`).join('') : '<div class="empty">Nada pendiente 🎉</div>';
   $$('#c-seg [data-k]').forEach(x => x.onclick = () => openLead(x.dataset.k));
   // filtros + tabla + kanban
-  const fp = $('#fp').value, ints = INTERESES.filter(i => ALL.some(l => l.interes === i));
+  const fp = $('#fp').value, ints = intereses().filter(i => ALL.some(l => l.interes === i));
   $('#fp').innerHTML = '<option value="">Todos los intereses</option>' + ints.map(p => `<option ${p === fp ? 'selected' : ''}>${esc(p)}</option>`).join('');
   if (!$('#fe').options[1]) $('#fe').innerHTML += ETAPAS.map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
   table(); kanban(); renderSeg(); renderFac(); if (openK && $('#dr').classList.contains('on')) renderProps();
 }
 const quien = l => `<b>${esc(l.nombre || l.empresa)}</b>${l.empresa && l.nombre && l.empresa !== l.nombre ? `<br><small style="color:var(--ink2)">${esc(l.empresa)}${l.cargo ? ' · ' + esc(l.cargo) : ''}</small>` : ''}`;
-const contacto = l => `${esc(l.celular)}<br><small style="color:var(--ink2)">${esc(l.correo)}</small>`;
+const contacto = l => `${esc(l.celular)}<br><small style="color:var(--ink2)">${esc(l.correo)}</small>${l.estadoCorreo && l.estadoCorreo !== 'Suscrito' ? `<br><span class="chip perdido">${esc(l.estadoCorreo)}</span>` : ''}`;
 const interesCell = l => `${esc(l.interes)}${detalle(l) ? `<br><small style="color:var(--ink2)">${esc(detalle(l))}</small>` : ''}`;
 const propCell = l => l.propuestas.length ? `${l.propuestas.length} · ${money(l.propuestas.reduce((s, p) => s + (+p.valor || 0), 0))}` : '—';
 function filtered() { const q = $('#q').value.toLowerCase(), p = $('#fp').value, e = $('#fe').value; return ALL.filter(l => (!p || l.interes === p) && (!e || (l.etapa || 'nuevo') === e) && (!q || [l.nombre, l.empresa, l.correo, l.celular].join(' ').toLowerCase().includes(q))); }
@@ -213,7 +214,7 @@ function table() {
 ['#q', '#fp', '#fe'].forEach(s => $(s).oninput = table); $('#kp').onchange = kanban;
 const invBadge = uid => { const ps = pagos[uid] || [], tot = ps.reduce((s, p) => s + (+p.valor || 0), 0), pag = ps.filter(p => p.estado === 'pagado').reduce((s, p) => s + (+p.valor || 0), 0); return `<small style="margin-top:4px"><span class="chip pagado">Cuenta en portal</span> ${tot ? Math.round(pag / tot * 100) + ' % pagado' : 'sin plan aún'}</small>`; };
 function kanban() {
-  const kp = $('#kp').value; $('#kp').innerHTML = '<option value="">Todos los intereses</option>' + INTERESES.filter(i => ALL.some(l => l.interes === i)).map(x => `<option ${x === kp ? 'selected' : ''}>${esc(x)}</option>`).join('');
+  const kp = $('#kp').value; $('#kp').innerHTML = '<option value="">Todos los intereses</option>' + intereses().filter(i => ALL.some(l => l.interes === i)).map(x => `<option ${x === kp ? 'selected' : ''}>${esc(x)}</option>`).join('');
   $('#kan').innerHTML = ETAPAS.map(([k, v]) => { const a = ALL.filter(l => (l.etapa || 'nuevo') === k && (!kp || l.interes === kp)); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-k="${l.k}"><b>${esc(l.nombre || l.empresa)}</b><small>${esc(l.interes)}${detalle(l) ? ' · ' + esc(detalle(l)) : ''}</small><small>${fdate(l.creado)}${l.propuestas.length ? ' · ' + l.propuestas.length + ' propuesta' + (l.propuestas.length > 1 ? 's' : '') : ''}</small>${l.uid ? invBadge(l.uid) : ''}</div>`).join('')}</div>`; }).join('');
   $$('#kan .lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('k', c.dataset.k); c.onclick = () => openLead(c.dataset.k); });
   $$('#kan .col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = e => { c.classList.remove('over'); setEtapa(e.dataTransfer.getData('k'), c.dataset.e); }; });
@@ -225,7 +226,7 @@ const log = (id, tipo, texto) => logL({ _col: 'leads', id }, tipo, texto);
 // ---------- Segmentación
 let segSel = '';
 function renderSeg() {
-  const wk = Date.now() - 7 * 864e5, segs = INTERESES.filter(i => ALL.some(l => l.interes === i));
+  const wk = Date.now() - 7 * 864e5, segs = intereses().filter(i => ALL.some(l => l.interes === i));
   if (segSel && !segs.includes(segSel)) segSel = '';
   const card = (name, a) => { const ab = a.filter(l => !['ganado', 'perdido'].includes(l.etapa)), pv = a.reduce((s, l) => s + l.propuestas.filter(p => !['rechazada'].includes(p.estado)).reduce((t, p) => t + (+p.valor || 0), 0), 0), fac = a.reduce((s, l) => s + facturadoL(l), 0);
     return `<div class="card kpi seg ${segSel === name ? 'on' : ''}" data-s="${esc(name)}"><small>${esc(name || 'Todos los contactos')}</small><b>${a.length}</b><span>${ALL.length ? Math.round(a.length / ALL.length * 100) : 0} % · ${ab.length} abiertos · ${a.filter(l => l.creado > wk).length} nuevos (7 días)</span><span style="display:block">${money(pv)} en propuestas · ${money(fac)} facturado</span></div>`; };
@@ -276,9 +277,9 @@ const csvDown = (name, H, rows) => { const a = document.createElement('a'); a.hr
 // ---------- Ficha del contacto
 let unsubAct, openK = '';
 const CAMPOS = [['nombre', 'Nombre / contacto'], ['empresa', 'Empresa'], ['cargo', 'Cargo'], ['documento', 'Documento / NIT'], ['celular', 'Celular'], ['correo', 'Correo'], ['ciudad', 'Ciudad'], ['interes', 'Interés', 'int'], ['proyecto', 'Proyecto'], ['servicio', 'Servicio', 'serv'], ['tipo', 'Tipo / detalle'], ['monto', 'Monto que quiere invertir'],
-  ['area', 'Área (m²)', 'number'], ['disciplinas', 'Disciplinas (ARQ, EST, MEP…)'], ['software', 'Software / entregables'], ['etapa', 'Etapa', 'etapa'], ['responsable', 'Responsable'], ['valorEstimado', 'Valor estimado (COP)', 'number'], ['proximoContacto', 'Próximo contacto', 'date'], ['notas', 'Perfil / notas', 'w'], ['motivoPerdida', 'Motivo de pérdida', 'w1']];
+  ['area', 'Área (m²)', 'number'], ['disciplinas', 'Disciplinas (ARQ, EST, MEP…)'], ['software', 'Software / entregables'], ['estadoCorreo', 'Estado del correo'], ['etapa', 'Etapa', 'etapa'], ['responsable', 'Responsable'], ['valorEstimado', 'Valor estimado (COP)', 'number'], ['proximoContacto', 'Próximo contacto', 'date'], ['etiquetas', 'Etiquetas / campañas', 'w1'], ['notas', 'Perfil / notas', 'w'], ['motivoPerdida', 'Motivo de pérdida', 'w1']];
 const campo = (l, [k, lab, t]) => { const v = l[k] ?? (k === 'etapa' ? 'nuevo' : '');
-  const inp = t === 'int' ? `<select id="d-${k}">${INTERESES.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>` : t === 'serv' ? `<select id="d-${k}">${['', ...SERV].map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>`
+  const inp = t === 'int' ? `<select id="d-${k}">${intereses().map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>` : t === 'serv' ? `<select id="d-${k}">${['', ...SERV].map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>`
     : t === 'etapa' ? `<select id="d-${k}">${ETAPAS.map(([a, b]) => `<option value="${a}" ${a === v ? 'selected' : ''}>${b}</option>`).join('')}</select>` : t === 'w' ? `<textarea id="d-${k}" rows="3">${esc(v)}</textarea>` : `<input id="d-${k}" ${['number', 'date'].includes(t) ? `type="${t}"` : ''} value="${esc(v)}">`;
   return `<label class="${t === 'w' || t === 'w1' ? 'w' : ''}">${lab}${inp}</label>`; };
 function openLead(k) {
@@ -339,7 +340,7 @@ function renderProps() {
 }
 $('#nuevo').onclick = async () => { const nombre = prompt('Nombre del contacto'); if (!nombre) return; const r = await F.addDoc(F.collection(db, 'leads'), { nombre, etapa: 'nuevo', origen: 'Manual', proyecto: '', creado: F.serverTimestamp() }); setTimeout(() => openLead('leads/' + r.id), 800); };
 $('#b-form').onclick = () => { const u = location.origin + location.pathname.replace(/index\.html$/, '') + 'bim.html'; navigator.clipboard?.writeText(u); alert('Formulario público BIM para tu web o redes:\n' + u + '\n\n(copiado al portapapeles)'); };
-$('#csv').onclick = () => { const cols = ['nombre', 'empresa', 'cargo', 'celular', 'correo', 'documento', 'ciudad', 'interes', 'proyecto', 'servicio', 'tipo', 'monto', 'area', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'notas', 'mensaje'];
+$('#csv').onclick = () => { const cols = ['nombre', 'empresa', 'cargo', 'celular', 'correo', 'documento', 'ciudad', 'interes', 'proyecto', 'servicio', 'tipo', 'monto', 'area', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'estadoCorreo', 'etiquetas', 'notas', 'mensaje'];
   csvDown(`leads-${today()}.csv`, [...cols, 'propuestas', 'facturado'], filtered().map(l => [...cols.map(c => l[c]), l.propuestas.length, facturadoL(l)])); };
 
 // ---------- Plantillas de recordatorio
