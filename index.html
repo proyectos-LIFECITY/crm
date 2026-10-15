@@ -19,7 +19,7 @@
 
 <div id="app" class="hide">
   <header class="top"><b>CRM Life City</b>
-    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="embudo">Embudo</button><button data-t="inv">Inversionistas y pagos</button><button data-t="rec">Recordatorios</button><button data-t="bim" style="margin-left:10px;border-left:1px solid rgba(255,255,255,.25);border-radius:0 99px 99px 0">Coordinación y diseño</button></nav>
+    <nav id="tabs"><button data-t="panel" class="on">Panel</button><button data-t="leads">Leads</button><button data-t="seg">Segmentación</button><button data-t="embudo">Embudo</button><button data-t="fac">Propuestas y facturación</button><button data-t="inv">Inversionistas y pagos</button><button data-t="rec">Recordatorios</button></nav>
     <span class="sp"></span><small id="who"></small><button class="btn ghost s" id="out">Salir</button></header>
 
   <main>
@@ -28,20 +28,45 @@
       <div class="grid charts">
         <div class="card"><h2>Embudo comercial</h2><p class="sub">Leads por etapa hoy</p><div id="c-etapa"></div></div>
         <div class="card"><h2>Leads nuevos por semana</h2><p class="sub">Últimas 12 semanas</p><div id="c-sem"></div></div>
-        <div class="card"><h2>Leads por proyecto</h2><p class="sub">Total histórico</p><div id="c-proy"></div></div>
+        <div class="card"><h2>Leads por interés</h2><p class="sub">Total histórico</p><div id="c-proy"></div></div>
         <div class="card"><h2>Origen de los leads</h2><p class="sub">De dónde llegan</p><div id="c-orig"></div></div>
-        <div class="card"><h2>Conversión por proyecto</h2><p class="sub">% de leads que separaron o cerraron</p><div id="c-conv"></div></div>
+        <div class="card"><h2>Conversión por interés</h2><p class="sub">% de leads que separaron o cerraron</p><div id="c-conv"></div></div>
         <div class="card"><h2>Seguimientos pendientes</h2><p class="sub">Próximo contacto vencido o para hoy</p><div id="c-seg"></div></div>
       </div>
     </section>
 
     <section id="v-leads" class="hide">
-      <div class="tools"><input id="q" placeholder="Buscar nombre, correo, celular…" style="min-width:260px"><select id="fp"><option value="">Todos los proyectos</option></select><select id="fe"><option value="">Todas las etapas</option></select>
-        <span class="sp" style="flex:1"></span><button class="btn" id="csv">Exportar CSV</button><button class="btn p" id="nuevo">+ Lead manual</button></div>
-      <div class="card tw"><table><thead><tr><th>Nombre</th><th>Contacto</th><th>Proyecto</th><th>Interés</th><th>Etapa</th><th>Próx. contacto</th><th>Creado</th></tr></thead><tbody id="tb"></tbody></table><div class="empty hide" id="noleads">Aún no hay leads. Llegarán aquí cuando alguien llene el formulario de una landing.</div></div>
+      <div class="tools"><input id="q" placeholder="Buscar nombre, empresa, correo, celular…" style="min-width:260px"><select id="fp"><option value="">Todos los intereses</option></select><select id="fe"><option value="">Todas las etapas</option></select>
+        <span class="sp" style="flex:1"></span><button class="btn" id="csv">Exportar CSV</button><button class="btn" id="b-form">Formulario público BIM</button><button class="btn p" id="nuevo">+ Lead manual</button></div>
+      <div class="card tw"><table><thead><tr><th>Nombre / empresa</th><th>Contacto</th><th>Interés</th><th>Etapa</th><th class="num">Propuestas</th><th>Próx. contacto</th><th>Creado</th></tr></thead><tbody id="tb"></tbody></table><div class="empty hide" id="noleads">Aún no hay leads. Llegarán aquí cuando alguien llene el formulario de una landing.</div></div>
     </section>
 
-    <section id="v-embudo" class="hide"><div class="tools"><select id="kp"><option value="">Todos los proyectos</option></select><span style="color:var(--ink2)">Arrastra una tarjeta para cambiarla de etapa. Quien crea su cuenta en el portal entra solo a la columna «Inversionista».</span></div><div class="kan" id="kan"></div></section>
+    <section id="v-seg" class="hide">
+      <div class="tools"><b style="font-size:1.05rem">¿En qué están interesados?</b><span style="color:var(--ink2)">Toca un segmento para ver sus contactos. El interés se cambia dentro de la ficha de cada contacto.</span></div>
+      <div class="grid kpis" id="s-cards"></div>
+      <div class="grid charts" style="margin-bottom:14px">
+        <div class="card"><h2 id="s-t1">Detalle del interés</h2><p class="sub">Proyecto o servicio que pidieron</p><div id="s-det"></div></div>
+        <div class="card"><h2>Etapa</h2><p class="sub">Dónde va cada contacto del segmento</p><div id="s-eta"></div></div>
+        <div class="card"><h2>Origen</h2><p class="sub">De dónde llegó el segmento</p><div id="s-ori"></div></div>
+      </div>
+      <div class="card tw"><table><thead><tr><th>Nombre / empresa</th><th>Contacto</th><th>Interés</th><th>Etapa</th><th class="num">Propuestas</th><th class="num">Facturado</th><th>Creado</th></tr></thead><tbody id="s-tb"></tbody></table></div>
+    </section>
+
+    <section id="v-fac" class="hide">
+      <div class="tools"><b style="font-size:1.05rem">Propuestas y facturación</b><span class="sp" style="flex:1"></span>
+        <select id="f-an"></select><select id="f-es"><option value="">Todas las facturas</option><option>Pendiente</option><option>Abono parcial</option><option>Vencida</option><option>Pagada</option><option>Anulada</option></select><input id="f-q" placeholder="Buscar cliente o número…" style="min-width:200px"><button class="btn" id="f-csv">Exportar CSV</button></div>
+      <div class="grid kpis" id="f-kpis"></div>
+      <div class="grid charts" style="margin-bottom:14px">
+        <div class="card"><h2>Facturado por mes</h2><p class="sub">Total con IVA · COP</p><div id="f-mes"></div></div>
+        <div class="card"><h2>Recaudado por mes</h2><p class="sub">Pagos y abonos recibidos · COP</p><div id="f-rec"></div></div>
+        <div class="card"><h2>Propuestas por estado</h2><p class="sub">Cantidad y valor</p><div id="f-pe"></div></div>
+        <div class="card"><h2>Cartera por cliente</h2><p class="sub">Saldo pendiente por cobrar</p><div id="f-car"></div></div>
+      </div>
+      <div class="card tw" style="margin-bottom:14px"><h2>Facturas</h2><p class="sub">Se crean dentro de la propuesta, en la ficha del contacto. El consecutivo es automático.</p><table><thead><tr><th>N.º</th><th>Cliente</th><th>Propuesta</th><th>Fecha</th><th>Vence</th><th class="num">Subtotal</th><th class="num">IVA</th><th class="num">Total</th><th class="num">Pagado</th><th class="num">Saldo</th><th>Estado</th></tr></thead><tbody id="f-tb"></tbody><tfoot id="f-tf"></tfoot></table><div class="empty hide" id="f-none">Aún no hay facturas.</div></div>
+      <div class="card tw"><h2>Propuestas</h2><p class="sub">Todas las cotizaciones enviadas a los contactos.</p><table><thead><tr><th>N.º</th><th>Cliente</th><th>Propuesta</th><th>Enviada</th><th>Vigencia</th><th class="num">Valor</th><th class="num">Facturado</th><th>Estado</th></tr></thead><tbody id="p-tb"></tbody></table><div class="empty hide" id="p-none">Aún no hay propuestas. Se crean desde la ficha de cada contacto.</div></div>
+    </section>
+
+    <section id="v-embudo" class="hide"><div class="tools"><select id="kp"><option value="">Todos los intereses</option></select><span style="color:var(--ink2)">Arrastra una tarjeta para cambiarla de etapa. Quien crea su cuenta en el portal entra solo a la columna «Inversionista».</span></div><div class="kan" id="kan"></div></section>
 
     <section id="v-rec" class="hide">
       <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));align-items:start">
@@ -54,21 +79,6 @@
         <div class="card"><h2>Vista previa</h2><p class="sub">Con el primer pago pendiente del proyecto elegido (o un ejemplo si aún no hay).</p><div id="r-prev" style="white-space:pre-wrap;background:#eaf6e4;border-radius:10px;padding:16px"></div>
           <p class="sub" style="margin-top:14px"><b>El toque personal</b> se escribe en la ficha de cada inversionista: el trato («Mafe», «Don Carlos») y una frase que solo aplica a esa persona. El saludo cambia según la hora, el tono según si el pago está por vencer, vence hoy o ya venció, y el avance se calcula con sus pagos.</p></div>
       </div></section>
-
-    <section id="v-bim" class="hide">
-      <div class="tools"><b style="font-size:1.05rem">Diseño constructivo · Coordinación BIM · Gestión de activos</b><span class="sp" style="flex:1"></span>
-        <select id="b-fs"><option value="">Todos los servicios</option></select><select id="b-fe"><option value="">Todas las etapas</option></select><input id="b-q" placeholder="Buscar empresa, contacto, proyecto…" style="min-width:220px">
-        <button class="btn" id="b-csv">Exportar CSV</button><button class="btn" id="b-form">Formulario público</button><button class="btn p" id="b-nuevo">+ Lead</button></div>
-      <div class="grid kpis" id="b-kpis"></div>
-      <div class="grid charts" style="margin-bottom:14px">
-        <div class="card"><h2>Embudo</h2><p class="sub">Oportunidades por etapa</p><div id="b-etapa"></div></div>
-        <div class="card"><h2>Por servicio</h2><p class="sub">Oportunidades abiertas y valor cotizado</p><div id="b-serv"></div></div>
-        <div class="card"><h2>Valor ganado por mes</h2><p class="sub">Últimos 12 meses · COP</p><div id="b-mes"></div></div>
-        <div class="card"><h2>Origen</h2><p class="sub">De dónde llegan</p><div id="b-orig"></div></div>
-      </div>
-      <div class="kan" id="b-kan"></div>
-      <div class="card tw" style="margin-top:14px"><table><thead><tr><th>Empresa / contacto</th><th>Servicio</th><th>Proyecto</th><th class="num">m²</th><th class="num">Valor cotizado</th><th>Etapa</th><th>Próx. contacto</th><th>Creado</th></tr></thead><tbody id="b-tb"></tbody></table><div class="empty hide" id="b-none">Aún no hay oportunidades. Llegan desde el formulario público o con «+ Lead».</div></div>
-    </section>
 
     <section id="v-inv" class="hide">
       <div id="recs"></div>
@@ -88,11 +98,37 @@ const F = await import(`${SDK}/firebase-firestore.js`);
 const app = initializeApp(firebaseConfig), auth = A.getAuth(app), db = F.getFirestore(app);
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const ETAPAS = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['calificado', 'Calificado'], ['propuesta', 'Propuesta enviada'], ['inversionista', 'Inversionista (cuenta creada)'], ['separo', 'Separó'], ['ganado', 'Ganado'], ['perdido', 'Perdido']];
+// Una sola lista de etapas para todos los leads (inversión, BIM, Sales App…)
+const ETAPAS = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['calificado', 'Calificado'], ['reunion', 'Reunión / levantamiento'], ['propuesta', 'Propuesta enviada'], ['negociacion', 'Negociación'], ['inversionista', 'Inversionista (cuenta creada)'], ['separo', 'Separó'], ['ganado', 'Ganado'], ['perdido', 'Perdido']];
 const EN = Object.fromEntries(ETAPAS), money = n => '$' + Math.round(n || 0).toLocaleString('es-CO');
 const fdate = d => d ? new Date(d).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 const today = () => new Date().toISOString().slice(0, 10), tel = c => String(c || '').replace(/\D/g, '').replace(/^(?=3\d{9}$)/, '57');
-let leads = [], invs = [], pagos = {}, me;
+let leads = [], bim = [], ALL = [], invs = [], pagos = {}, me;
+// Segmentación: en qué está interesado cada contacto
+const INTERESES = ['Inversión inmobiliaria', 'Diseño y coordinación BIM', 'Sales App / IA', 'Otro'];
+const SERV = ['Diseño arquitectónico', 'Diseño estructural', 'Diseño MEP', 'Coordinación BIM', 'Modelado BIM / as-built', 'Cantidades y presupuesto 5D', 'Gestión de activos / facility', 'Escaneo y nube de puntos', 'Otro'];
+const interesDe = l => l.interes || (l._col === 'leads' ? 'Inversión inmobiliaria' : /sales app/i.test(l.tipo || '') ? 'Sales App / IA' : 'Diseño y coordinación BIM');
+const detalle = l => l._col === 'leads' ? (l.proyecto || '') : [l.servicio && l.servicio !== 'Otro' ? l.servicio : '', l.proyecto].filter(Boolean).join(' · ') || l.tipo || '';
+// Los leads BIM siguen llegando a la colección leadsBim (formulario público y lead.js); en el CRM se ven en la misma lista.
+const ALIAS = { leadsBim: { nombre: 'contacto', documento: 'nit', valorEstimado: 'valor' } };
+function norm(col, d) {
+  const x = { id: d.id, _col: col, ...d.data(), creado: d.data().creado?.toDate?.() }; x.k = col + '/' + d.id;
+  if (col === 'leadsBim') { x.nombre = x.contacto || x.empresa || ''; x.documento = x.nit; x.valorEstimado = x.valor; }
+  x.propuestas = x.propuestas || []; x.interes = interesDe(x); return x;
+}
+const byK = k => ALL.find(x => x.k === k);
+const upd = (l, d) => F.updateDoc(F.doc(db, l._col, l.id), Object.fromEntries(Object.entries(d).map(([k, v]) => [ALIAS[l._col]?.[k] || k, v])));
+// Propuestas y facturas viven dentro del documento del lead (campo propuestas)
+const PE = [['borrador', 'Borrador'], ['enviada', 'Enviada'], ['negociacion', 'En negociación'], ['aprobada', 'Aprobada'], ['rechazada', 'Rechazada']], PEN = Object.fromEntries(PE);
+const pChip = p => p.estado === 'aprobada' ? 'ganado' : p.estado === 'rechazada' ? 'perdido' : ['enviada', 'negociacion'].includes(p.estado) && p.vigencia && p.vigencia < today() ? 'vencido' : p.estado === 'negociacion' ? 'negociacion' : p.estado === 'enviada' ? 'propuesta' : '';
+const pLabel = p => pChip(p) === 'vencido' ? PEN[p.estado] + ' · vencida' : PEN[p.estado] || p.estado;
+const fTotal = f => Math.round((+f.subtotal || 0) * (1 + (+f.iva || 0) / 100)), fPag = f => (f.abonos || []).reduce((s, a) => s + (+a.valor || 0), 0);
+const fEst = f => f.anulada ? ['perdido', 'Anulada'] : fPag(f) >= fTotal(f) ? ['pagado', 'Pagada'] : f.vence && f.vence < today() ? ['vencido', 'Vencida'] : fPag(f) > 0 ? ['pronto', 'Abono parcial'] : ['', 'Pendiente'];
+const facturas = () => ALL.flatMap(l => l.propuestas.flatMap(p => (p.facturas || []).map(f => ({ l, p, f }))));
+const facturadoP = p => (p.facturas || []).filter(f => !f.anulada).reduce((s, f) => s + (+f.subtotal || 0), 0);
+const facturadoL = l => l.propuestas.reduce((s, p) => s + (p.facturas || []).filter(f => !f.anulada).reduce((t, f) => t + fTotal(f), 0), 0);
+const consecutivo = (pre, nums) => pre + '-' + String(Math.max(0, ...nums.map(n => +String(n || '').replace(/\D/g, '') || 0)) + 1).padStart(4, '0');
+const uid8 = () => Math.random().toString(36).slice(2, 10);
 
 // ---------- Acceso
 $('#gbtn').onclick = () => A.signInWithPopup(auth, new A.GoogleAuthProvider()).catch(e => $('#lerr').textContent = msg(e));
@@ -109,8 +145,9 @@ A.onAuthStateChanged(auth, u => {
 // ---------- Datos en vivo
 let started = false;
 function start() {
-  if (started) return; started = true; startBim();
-  F.onSnapshot(F.query(F.collection(db, 'leads'), F.orderBy('creado', 'desc')), s => { leads = s.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); leadsReady = true; render(); syncInv(); }, e => alert('No se pudieron leer los leads: ' + e.message));
+  if (started) return; started = true;
+  F.onSnapshot(F.query(F.collection(db, 'leads'), F.orderBy('creado', 'desc')), s => { leads = s.docs.map(d => norm('leads', d)); leadsReady = true; render(); syncInv(); }, e => alert('No se pudieron leer los leads: ' + e.message));
+  F.onSnapshot(F.query(F.collection(db, 'leadsBim'), F.orderBy('creado', 'desc')), s => { bim = s.docs.map(d => norm('leadsBim', d)); render(); }, e => console.error(e));
   F.onSnapshot(F.collection(db, 'inversionistas'), s => { invs = s.docs.map(d => ({ id: d.id, ...d.data() })); invs.forEach(watchPagos); renderInv(); syncInv(); initRec(); });
   F.onSnapshot(F.doc(db, 'config', 'recordatorios'), d => { TPL = d.data() || {}; renderInv(); initRec(true); });
 }
@@ -141,127 +178,169 @@ $('#tabs').onclick = e => { const b = e.target.closest('button'); if (!b) return
 const hbars = (el, rows, fmt = v => v) => { const max = Math.max(1, ...rows.map(r => r[1])); $(el).innerHTML = rows.length ? rows.map(([k, v, t]) => `<div class="hb" title="${esc(k)}: ${esc(t ?? fmt(v))}"><span>${esc(k)}</span><i style="width:${v / max * 100}%"></i><em>${esc(fmt(v))}</em></div>`).join('') : '<div class="empty">Sin datos todavía</div>'; };
 const count = (arr, f) => Object.entries(arr.reduce((m, x) => { const k = f(x) || 'Sin dato'; m[k] = (m[k] || 0) + 1; return m; }, {})).sort((a, b) => b[1] - a[1]);
 function render() {
-  const n = leads.length, won = leads.filter(l => ['separo', 'ganado'].includes(l.etapa)).length, wk = Date.now() - 7 * 864e5;
-  const venc = leads.filter(l => l.proximoContacto && l.proximoContacto <= today() && !['ganado', 'perdido'].includes(l.etapa));
-  const pipe = leads.filter(l => !['ganado', 'perdido'].includes(l.etapa)).reduce((s, l) => s + (+l.valorEstimado || 0), 0);
-  $('#kpis').innerHTML = [['Leads totales', n, ''], ['Nuevos (7 días)', leads.filter(l => l.creado > wk).length, ''], ['Sin atender', leads.filter(l => l.etapa === 'nuevo').length, 'en etapa Nuevo'],
+  ALL = [...leads, ...bim].sort((a, b) => (b.creado || 0) - (a.creado || 0));
+  const n = ALL.length, won = ALL.filter(l => ['separo', 'ganado'].includes(l.etapa)).length, wk = Date.now() - 7 * 864e5;
+  const venc = ALL.filter(l => l.proximoContacto && l.proximoContacto <= today() && !['ganado', 'perdido'].includes(l.etapa));
+  const pipe = ALL.filter(l => !['ganado', 'perdido'].includes(l.etapa)).reduce((s, l) => s + (+l.valorEstimado || 0), 0);
+  $('#kpis').innerHTML = [['Leads totales', n, ''], ['Nuevos (7 días)', ALL.filter(l => l.creado > wk).length, ''], ['Sin atender', ALL.filter(l => (l.etapa || 'nuevo') === 'nuevo').length, 'en etapa Nuevo'],
   ['Conversión', n ? (won / n * 100).toFixed(1) + ' %' : '—', `${won} separaron o cerraron`], ['Seguimientos vencidos', venc.length, 'próximo contacto ≤ hoy'], ['Valor en negociación', money(pipe), 'suma de valor estimado']]
     .map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${c}</span></div>`).join('');
-  hbars('#c-etapa', ETAPAS.map(([k, v]) => [v, leads.filter(l => (l.etapa || 'nuevo') === k).length]));
-  hbars('#c-proy', count(leads, l => l.proyecto)); hbars('#c-orig', count(leads, l => l.origen));
-  const proys = [...new Set(leads.map(l => l.proyecto || 'Sin dato'))];
-  hbars('#c-conv', proys.map(p => { const a = leads.filter(l => (l.proyecto || 'Sin dato') === p), w = a.filter(l => ['separo', 'ganado'].includes(l.etapa)).length; return [p, a.length ? w / a.length * 100 : 0, `${w} de ${a.length}`]; }), v => v.toFixed(0) + ' %');
+  hbars('#c-etapa', ETAPAS.map(([k, v]) => [v, ALL.filter(l => (l.etapa || 'nuevo') === k).length]));
+  hbars('#c-proy', count(ALL, l => l.interes)); hbars('#c-orig', count(ALL, l => l.origen));
+  hbars('#c-conv', INTERESES.map(p => { const a = ALL.filter(l => l.interes === p), w = a.filter(l => ['separo', 'ganado'].includes(l.etapa)).length; return [p, a.length ? w / a.length * 100 : 0, `${w} de ${a.length}`]; }).filter((r, i) => ALL.some(l => l.interes === INTERESES[i])), v => v.toFixed(0) + ' %');
   // semanas
   const weeks = [...Array(12)].map((_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay() + 1 - 7 * (11 - i)); return d; });
-  const wc = weeks.map((d, i) => leads.filter(l => l.creado >= d && l.creado < (weeks[i + 1] || Infinity)).length), mx = Math.max(1, ...wc);
+  const wc = weeks.map((d, i) => ALL.filter(l => l.creado >= d && l.creado < (weeks[i + 1] || Infinity)).length), mx = Math.max(1, ...wc);
   $('#c-sem').innerHTML = `<div class="vb">${wc.map((v, i) => `<div data-t="Semana del ${fdate(weeks[i])}: ${v} leads"><i style="height:${v / mx * 100}%"></i></div>`).join('')}</div><div class="vbx">${weeks.map((d, i) => `<span>${i % 2 ? '' : d.getDate() + '/' + (d.getMonth() + 1)}</span>`).join('')}</div>`;
-  $('#c-seg').innerHTML = venc.length ? venc.slice(0, 8).map(l => `<div class="hb" style="grid-template-columns:1fr auto;cursor:pointer" data-id="${l.id}"><span><b style="color:var(--ink)">${esc(l.nombre)}</b> · ${esc(l.proyecto)}</span><em style="width:auto">${fdate(l.proximoContacto + 'T12:00')}</em></div>`).join('') : '<div class="empty">Nada pendiente 🎉</div>';
-  $$('#c-seg [data-id]').forEach(x => x.onclick = () => openLead(x.dataset.id));
+  $('#c-seg').innerHTML = venc.length ? venc.slice(0, 8).map(l => `<div class="hb" style="grid-template-columns:1fr auto;cursor:pointer" data-k="${l.k}"><span><b style="color:var(--ink)">${esc(l.nombre || l.empresa)}</b> · ${esc(detalle(l) || l.interes)}</span><em style="width:auto">${fdate(l.proximoContacto + 'T12:00')}</em></div>`).join('') : '<div class="empty">Nada pendiente 🎉</div>';
+  $$('#c-seg [data-k]').forEach(x => x.onclick = () => openLead(x.dataset.k));
   // filtros + tabla + kanban
-  const fp = $('#fp').value; $('#fp').innerHTML = '<option value="">Todos los proyectos</option>' + proys.map(p => `<option ${p === fp ? 'selected' : ''}>${esc(p)}</option>`).join('');
+  const fp = $('#fp').value, ints = INTERESES.filter(i => ALL.some(l => l.interes === i));
+  $('#fp').innerHTML = '<option value="">Todos los intereses</option>' + ints.map(p => `<option ${p === fp ? 'selected' : ''}>${esc(p)}</option>`).join('');
   if (!$('#fe').options[1]) $('#fe').innerHTML += ETAPAS.map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
-  table(); kanban();
+  table(); kanban(); renderSeg(); renderFac(); if (openK && $('#dr').classList.contains('on')) renderProps();
 }
-function filtered() { const q = $('#q').value.toLowerCase(), p = $('#fp').value, e = $('#fe').value; return leads.filter(l => (!p || (l.proyecto || 'Sin dato') === p) && (!e || (l.etapa || 'nuevo') === e) && (!q || [l.nombre, l.correo, l.celular].join(' ').toLowerCase().includes(q))); }
+const quien = l => `<b>${esc(l.nombre || l.empresa)}</b>${l.empresa && l.nombre && l.empresa !== l.nombre ? `<br><small style="color:var(--ink2)">${esc(l.empresa)}${l.cargo ? ' · ' + esc(l.cargo) : ''}</small>` : ''}`;
+const contacto = l => `${esc(l.celular)}<br><small style="color:var(--ink2)">${esc(l.correo)}</small>`;
+const interesCell = l => `${esc(l.interes)}${detalle(l) ? `<br><small style="color:var(--ink2)">${esc(detalle(l))}</small>` : ''}`;
+const propCell = l => l.propuestas.length ? `${l.propuestas.length} · ${money(l.propuestas.reduce((s, p) => s + (+p.valor || 0), 0))}` : '—';
+function filtered() { const q = $('#q').value.toLowerCase(), p = $('#fp').value, e = $('#fe').value; return ALL.filter(l => (!p || l.interes === p) && (!e || (l.etapa || 'nuevo') === e) && (!q || [l.nombre, l.empresa, l.correo, l.celular].join(' ').toLowerCase().includes(q))); }
 function table() {
-  const r = filtered(); $('#noleads').classList.toggle('hide', !!leads.length);
-  $('#tb').innerHTML = r.map(l => `<tr data-id="${l.id}"><td><b>${esc(l.nombre)}</b></td><td>${esc(l.celular)}<br><small style="color:var(--ink2)">${esc(l.correo)}</small></td><td>${esc(l.proyecto)}</td><td>${esc(l.monto)}</td><td><span class="chip ${esc(l.etapa)}">${esc(EN[l.etapa] || l.etapa)}</span></td><td>${l.proximoContacto ? fdate(l.proximoContacto + 'T12:00') : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('');
-  $$('#tb tr').forEach(t => t.onclick = () => openLead(t.dataset.id));
+  const r = filtered(); $('#noleads').classList.toggle('hide', !!ALL.length);
+  $('#tb').innerHTML = r.map(l => `<tr data-k="${l.k}"><td>${quien(l)}</td><td>${contacto(l)}</td><td>${interesCell(l)}</td><td><span class="chip ${esc(l.etapa)}">${esc(EN[l.etapa] || l.etapa || 'Nuevo')}</span></td><td class="num">${propCell(l)}</td><td>${l.proximoContacto ? fdate(l.proximoContacto + 'T12:00') : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('');
+  $$('#tb tr').forEach(t => t.onclick = () => openLead(t.dataset.k));
 }
 ['#q', '#fp', '#fe'].forEach(s => $(s).oninput = table); $('#kp').onchange = kanban;
 const invBadge = uid => { const ps = pagos[uid] || [], tot = ps.reduce((s, p) => s + (+p.valor || 0), 0), pag = ps.filter(p => p.estado === 'pagado').reduce((s, p) => s + (+p.valor || 0), 0); return `<small style="margin-top:4px"><span class="chip pagado">Cuenta en portal</span> ${tot ? Math.round(pag / tot * 100) + ' % pagado' : 'sin plan aún'}</small>`; };
 function kanban() {
-  const kp = $('#kp').value, prs = [...new Set(leads.map(l => l.proyecto || 'Sin dato'))]; $('#kp').innerHTML = '<option value="">Todos los proyectos</option>' + prs.map(x => `<option ${x === kp ? 'selected' : ''}>${esc(x)}</option>`).join('');
-  $('#kan').innerHTML = ETAPAS.map(([k, v]) => { const a = leads.filter(l => (l.etapa || 'nuevo') === k && (!kp || (l.proyecto || 'Sin dato') === kp)); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-id="${l.id}"><b>${esc(l.nombre)}</b><small>${esc(l.proyecto)} · ${esc(l.monto)}</small><small>${fdate(l.creado)}</small>${l.uid ? invBadge(l.uid) : ''}</div>`).join('')}</div>`; }).join('');
-  $$('.lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('id', c.dataset.id); c.onclick = () => openLead(c.dataset.id); });
-  $$('.col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = e => { c.classList.remove('over'); setEtapa(e.dataTransfer.getData('id'), c.dataset.e); }; });
+  const kp = $('#kp').value; $('#kp').innerHTML = '<option value="">Todos los intereses</option>' + INTERESES.filter(i => ALL.some(l => l.interes === i)).map(x => `<option ${x === kp ? 'selected' : ''}>${esc(x)}</option>`).join('');
+  $('#kan').innerHTML = ETAPAS.map(([k, v]) => { const a = ALL.filter(l => (l.etapa || 'nuevo') === k && (!kp || l.interes === kp)); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-k="${l.k}"><b>${esc(l.nombre || l.empresa)}</b><small>${esc(l.interes)}${detalle(l) ? ' · ' + esc(detalle(l)) : ''}</small><small>${fdate(l.creado)}${l.propuestas.length ? ' · ' + l.propuestas.length + ' propuesta' + (l.propuestas.length > 1 ? 's' : '') : ''}</small>${l.uid ? invBadge(l.uid) : ''}</div>`).join('')}</div>`; }).join('');
+  $$('#kan .lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('k', c.dataset.k); c.onclick = () => openLead(c.dataset.k); });
+  $$('#kan .col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = e => { c.classList.remove('over'); setEtapa(e.dataTransfer.getData('k'), c.dataset.e); }; });
 }
-async function setEtapa(id, etapa) { const l = leads.find(x => x.id === id); if (!l || l.etapa === etapa) return; await F.updateDoc(F.doc(db, 'leads', id), { etapa, actualizado: F.serverTimestamp() }); await log(id, 'etapa', `Etapa: ${EN[l.etapa] || l.etapa} → ${EN[etapa]}`); }
-const log = (id, tipo, texto) => F.addDoc(F.collection(db, 'leads', id, 'actividades'), { tipo, texto, fecha: F.serverTimestamp(), autor: me.email });
+async function setEtapa(k, etapa) { const l = byK(k); if (!l || (l.etapa || 'nuevo') === etapa) return; await upd(l, { etapa, ...(etapa === 'ganado' && !l.ganadoEl ? { ganadoEl: today() } : {}), actualizado: F.serverTimestamp() }); await logL(l, 'etapa', `Etapa: ${EN[l.etapa] || 'Nuevo'} → ${EN[etapa]}`); }
+const logL = (l, tipo, texto) => F.addDoc(F.collection(db, l._col, l.id, 'actividades'), { tipo, texto, fecha: F.serverTimestamp(), autor: me.email });
+const log = (id, tipo, texto) => logL({ _col: 'leads', id }, tipo, texto);
 
-// ---------- Ficha del lead
-let unsubAct;
-function openLead(id) {
-  const l = leads.find(x => x.id === id); if (!l) return; const w = tel(l.celular);
-  $('#dr').innerHTML = `<button class="btn s x">✕</button><h2>${esc(l.nombre)}</h2><small style="color:var(--ink2)">${esc(l.proyecto)} · llegó ${fdate(l.creado)} por ${esc(l.origen)} ${l.utm ? '(' + esc(l.utm) + ')' : ''}</small>
+// ---------- Segmentación
+let segSel = '';
+function renderSeg() {
+  const wk = Date.now() - 7 * 864e5, segs = INTERESES.filter(i => ALL.some(l => l.interes === i));
+  if (segSel && !segs.includes(segSel)) segSel = '';
+  const card = (name, a) => { const ab = a.filter(l => !['ganado', 'perdido'].includes(l.etapa)), pv = a.reduce((s, l) => s + l.propuestas.filter(p => !['rechazada'].includes(p.estado)).reduce((t, p) => t + (+p.valor || 0), 0), 0), fac = a.reduce((s, l) => s + facturadoL(l), 0);
+    return `<div class="card kpi seg ${segSel === name ? 'on' : ''}" data-s="${esc(name)}"><small>${esc(name || 'Todos los contactos')}</small><b>${a.length}</b><span>${ALL.length ? Math.round(a.length / ALL.length * 100) : 0} % · ${ab.length} abiertos · ${a.filter(l => l.creado > wk).length} nuevos (7 días)</span><span style="display:block">${money(pv)} en propuestas · ${money(fac)} facturado</span></div>`; };
+  $('#s-cards').innerHTML = card('', ALL) + segs.map(s => card(s, ALL.filter(l => l.interes === s))).join('');
+  $$('#s-cards [data-s]').forEach(c => c.onclick = () => { segSel = c.dataset.s; renderSeg(); });
+  const a = ALL.filter(l => !segSel || l.interes === segSel);
+  $('#s-t1').textContent = segSel ? `Detalle · ${segSel}` : 'Detalle del interés';
+  hbars('#s-det', count(a, l => segSel ? detalle(l) : l.interes)); hbars('#s-eta', ETAPAS.map(([k, v]) => [v, a.filter(l => (l.etapa || 'nuevo') === k).length]).filter(r => r[1])); hbars('#s-ori', count(a, l => l.origen));
+  $('#s-tb').innerHTML = a.map(l => `<tr data-k="${l.k}"><td>${quien(l)}</td><td>${contacto(l)}</td><td>${interesCell(l)}</td><td><span class="chip ${esc(l.etapa)}">${esc(EN[l.etapa] || l.etapa || 'Nuevo')}</span></td><td class="num">${propCell(l)}</td><td class="num">${facturadoL(l) ? money(facturadoL(l)) : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('') || '<tr><td colspan="7" class="empty">Sin contactos en este segmento</td></tr>';
+  $$('#s-tb tr[data-k]').forEach(t => t.onclick = () => openLead(t.dataset.k));
+}
+
+// ---------- Propuestas y facturación (contador / ERP)
+const yr = d => (d || '').slice(0, 4);
+function renderFac() {
+  const fs = facturas(), years = [...new Set([String(new Date().getFullYear()), ...fs.map(x => yr(x.f.fecha))].filter(Boolean))].sort().reverse(), an = $('#f-an').value || String(new Date().getFullYear());
+  $('#f-an').innerHTML = years.map(y => `<option ${y === an ? 'selected' : ''}>${y}</option>`).join('') + `<option value="*" ${an === '*' ? 'selected' : ''}>Todos los años</option>`;
+  const enAn = x => an === '*' || yr(x) === an, vivas = fs.filter(x => !x.f.anulada), ps = ALL.flatMap(l => l.propuestas.map(p => ({ l, p })));
+  const abiertas = ps.filter(x => ['enviada', 'negociacion'].includes(x.p.estado)), apr = ps.filter(x => x.p.estado === 'aprobada'), rech = ps.filter(x => x.p.estado === 'rechazada');
+  const facturado = vivas.filter(x => enAn(x.f.fecha)).reduce((s, x) => s + fTotal(x.f), 0), abonos = vivas.flatMap(x => x.f.abonos || []), recaudado = abonos.filter(a => enAn(a.fecha)).reduce((s, a) => s + (+a.valor || 0), 0);
+  const cartera = vivas.reduce((s, x) => s + Math.max(0, fTotal(x.f) - fPag(x.f)), 0), vencida = vivas.filter(x => fEst(x.f)[1] === 'Vencida').reduce((s, x) => s + fTotal(x.f) - fPag(x.f), 0);
+  const ivaAn = vivas.filter(x => enAn(x.f.fecha)).reduce((s, x) => s + fTotal(x.f) - (+x.f.subtotal || 0), 0), porFacturar = apr.reduce((s, x) => s + Math.max(0, (+x.p.valor || 0) - facturadoP(x.p)), 0);
+  $('#f-kpis').innerHTML = [['Propuestas abiertas', abiertas.length, money(abiertas.reduce((s, x) => s + (+x.p.valor || 0), 0)) + ' en juego'], ['Tasa de aprobación', apr.length + rech.length ? Math.round(apr.length / (apr.length + rech.length) * 100) + ' %' : '—', `${apr.length} aprobadas · ${rech.length} rechazadas`],
+    ['Aprobado por facturar', money(porFacturar), 'propuestas aprobadas sin factura'], [`Facturado ${an === '*' ? '(total)' : an}`, money(facturado), `IVA generado ${money(ivaAn)}`], [`Recaudado ${an === '*' ? '(total)' : an}`, money(recaudado), 'pagos y abonos recibidos'],
+    ['Cartera por cobrar', money(cartera), `${money(vencida)} vencida`]].map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${c}</span></div>`).join('');
+  const months = [...Array(12)].map((_, i) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 11 + i); return d.toISOString().slice(0, 7); });
+  const vbar = (el, vals) => { const mx = Math.max(1, ...vals); $(el).innerHTML = `<div class="vb">${vals.map((v, i) => `<div data-t="${new Date(months[i] + '-15').toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })}: ${money(v)}"><i style="height:${v / mx * 100}%"></i></div>`).join('')}</div><div class="vbx">${months.map((m, i) => `<span>${i % 2 ? '' : new Date(m + '-15').toLocaleDateString('es-CO', { month: 'short' })}</span>`).join('')}</div>`; };
+  vbar('#f-mes', months.map(m => vivas.filter(x => (x.f.fecha || '').startsWith(m)).reduce((s, x) => s + fTotal(x.f), 0)));
+  vbar('#f-rec', months.map(m => abonos.filter(a => (a.fecha || '').startsWith(m)).reduce((s, a) => s + (+a.valor || 0), 0)));
+  hbars('#f-pe', PE.map(([k, v]) => { const a = ps.filter(x => x.p.estado === k); return [v, a.length, `${a.length} · ${money(a.reduce((s, x) => s + (+x.p.valor || 0), 0))}`]; }).filter(r => r[1]));
+  hbars('#f-car', Object.entries(vivas.reduce((m, x) => { const s = fTotal(x.f) - fPag(x.f); if (s > 0) { const c = x.l.empresa || x.l.nombre; m[c] = (m[c] || 0) + s; } return m; }, {})).sort((a, b) => b[1] - a[1]).slice(0, 10), money);
+  const q = $('#f-q').value.toLowerCase(), es = $('#f-es').value, rows = fs.filter(x => enAn(x.f.fecha) && (!es || fEst(x.f)[1] === es) && (!q || [x.f.numero, x.p.numero, x.l.nombre, x.l.empresa].join(' ').toLowerCase().includes(q))).sort((a, b) => (b.f.fecha || '').localeCompare(a.f.fecha || '') || (b.f.numero || '').localeCompare(a.f.numero || ''));
+  $('#f-none').classList.toggle('hide', !!fs.length);
+  $('#f-tb').innerHTML = rows.map(({ l, p, f }) => `<tr data-k="${l.k}"><td><b>${esc(f.numero)}</b></td><td>${esc(l.empresa || l.nombre)}</td><td>${esc(p.numero)} · ${esc(p.titulo)}</td><td>${fdate(f.fecha + 'T12:00')}</td><td>${f.vence ? fdate(f.vence + 'T12:00') : '—'}</td><td class="num">${money(f.subtotal)}</td><td class="num">${money(fTotal(f) - (+f.subtotal || 0))}</td><td class="num">${money(fTotal(f))}</td><td class="num">${money(fPag(f))}</td><td class="num">${f.anulada ? '—' : money(fTotal(f) - fPag(f))}</td><td><span class="chip ${fEst(f)[0]}">${fEst(f)[1]}</span></td></tr>`).join('');
+  const vr = rows.filter(x => !x.f.anulada), sm = g => money(vr.reduce((s, x) => s + g(x.f), 0));
+  $('#f-tf').innerHTML = rows.length ? `<tr><th colspan="5">Total (${vr.length} facturas vigentes)</th><th class="num">${sm(f => +f.subtotal || 0)}</th><th class="num">${sm(f => fTotal(f) - (+f.subtotal || 0))}</th><th class="num">${sm(fTotal)}</th><th class="num">${sm(fPag)}</th><th class="num">${sm(f => fTotal(f) - fPag(f))}</th><th></th></tr>` : '';
+  $$('#f-tb tr').forEach(t => t.onclick = () => openLead(t.dataset.k));
+  $('#p-none').classList.toggle('hide', !!ps.length);
+  $('#p-tb').innerHTML = ps.sort((a, b) => (b.p.fecha || '').localeCompare(a.p.fecha || '')).map(({ l, p }) => `<tr data-k="${l.k}"><td><b>${esc(p.numero)}</b></td><td>${esc(l.empresa || l.nombre)}</td><td>${esc(p.titulo)}</td><td>${p.fecha ? fdate(p.fecha + 'T12:00') : '—'}</td><td>${p.vigencia ? fdate(p.vigencia + 'T12:00') : '—'}</td><td class="num">${money(p.valor)}</td><td class="num">${facturadoP(p) ? money(facturadoP(p)) : '—'}</td><td><span class="chip ${pChip(p)}">${esc(pLabel(p))}</span></td></tr>`).join('');
+  $$('#p-tb tr').forEach(t => t.onclick = () => openLead(t.dataset.k));
+}
+['#f-an', '#f-es', '#f-q'].forEach(s => $(s).oninput = renderFac);
+$('#f-csv').onclick = () => { const H = ['numero', 'cliente', 'nit', 'propuesta', 'concepto', 'fecha', 'vence', 'subtotal', 'iva_pct', 'iva', 'total', 'pagado', 'saldo', 'estado'];
+  const rows = facturas().map(({ l, p, f }) => [f.numero, l.empresa || l.nombre, l.documento, p.numero, f.concepto || p.titulo, f.fecha, f.vence, +f.subtotal || 0, +f.iva || 0, fTotal(f) - (+f.subtotal || 0), fTotal(f), fPag(f), f.anulada ? 0 : fTotal(f) - fPag(f), fEst(f)[1]]);
+  csvDown(`facturas-${today()}.csv`, H, rows); };
+const csvDown = (name, H, rows) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + [H.join(','), ...rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))].join('\n')], { type: 'text/csv' })); a.download = name; a.click(); };
+
+// ---------- Ficha del contacto
+let unsubAct, openK = '';
+const CAMPOS = [['nombre', 'Nombre / contacto'], ['empresa', 'Empresa'], ['cargo', 'Cargo'], ['documento', 'Documento / NIT'], ['celular', 'Celular'], ['correo', 'Correo'], ['ciudad', 'Ciudad'], ['interes', 'Interés', 'int'], ['proyecto', 'Proyecto'], ['servicio', 'Servicio', 'serv'], ['tipo', 'Tipo / detalle'], ['monto', 'Monto que quiere invertir'],
+  ['area', 'Área (m²)', 'number'], ['disciplinas', 'Disciplinas (ARQ, EST, MEP…)'], ['software', 'Software / entregables'], ['etapa', 'Etapa', 'etapa'], ['responsable', 'Responsable'], ['valorEstimado', 'Valor estimado (COP)', 'number'], ['proximoContacto', 'Próximo contacto', 'date'], ['notas', 'Perfil / notas', 'w'], ['motivoPerdida', 'Motivo de pérdida', 'w1']];
+const campo = (l, [k, lab, t]) => { const v = l[k] ?? (k === 'etapa' ? 'nuevo' : '');
+  const inp = t === 'int' ? `<select id="d-${k}">${INTERESES.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>` : t === 'serv' ? `<select id="d-${k}">${['', ...SERV].map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select>`
+    : t === 'etapa' ? `<select id="d-${k}">${ETAPAS.map(([a, b]) => `<option value="${a}" ${a === v ? 'selected' : ''}>${b}</option>`).join('')}</select>` : t === 'w' ? `<textarea id="d-${k}" rows="3">${esc(v)}</textarea>` : `<input id="d-${k}" ${['number', 'date'].includes(t) ? `type="${t}"` : ''} value="${esc(v)}">`;
+  return `<label class="${t === 'w' || t === 'w1' ? 'w' : ''}">${lab}${inp}</label>`; };
+function openLead(k) {
+  const l = byK(k); if (!l) return; openK = k; const w = tel(l.celular);
+  $('#dr').innerHTML = `<button class="btn s x">✕</button><h2>${esc(l.nombre || l.empresa)}</h2><small style="color:var(--ink2)">${esc(l.empresa && l.empresa !== l.nombre ? l.empresa + ' · ' : '')}${esc(l.interes)}${detalle(l) ? ' · ' + esc(detalle(l)) : ''}</small><br><small style="color:var(--muted)">Llegó ${fdate(l.creado)} por ${esc(l.origen || '—')}${l.utm ? ' (' + esc(l.utm) + ')' : ''}${l.pagina ? ` · <a href="${esc(l.pagina)}" target="_blank" rel="noopener">página</a>` : ''}</small>
   <div class="acts">${w ? `<a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${w}" data-log="whatsapp">WhatsApp</a><a class="btn s" href="tel:+${w}" data-log="llamada">Llamar</a>` : ''}${l.correo ? `<a class="btn s" href="mailto:${esc(l.correo)}" data-log="correo">Correo</a>` : ''}</div>
+  <div class="grid kpis mini" id="d-res"></div>
   ${l.mensaje ? `<div class="card" style="background:#f7f6f2"><small style="color:var(--ink2)">Mensaje del formulario</small><br>${esc(l.mensaje)}</div>` : ''}
-  <div class="f"><label>Nombre<input id="d-nombre" value="${esc(l.nombre)}"></label><label>Documento<input id="d-documento" value="${esc(l.documento)}"></label>
-  <label>Celular<input id="d-celular" value="${esc(l.celular)}"></label><label>Correo<input id="d-correo" value="${esc(l.correo)}"></label>
-  <label>Ciudad<input id="d-ciudad" value="${esc(l.ciudad)}"></label><label>Proyecto<input id="d-proyecto" value="${esc(l.proyecto)}"></label>
-  <label>Etapa<select id="d-etapa">${ETAPAS.map(([k, v]) => `<option value="${k}" ${k === (l.etapa || 'nuevo') ? 'selected' : ''}>${v}</option>`).join('')}</select></label><label>Responsable<input id="d-responsable" value="${esc(l.responsable)}"></label>
-  <label>Valor estimado (COP)<input id="d-valorEstimado" type="number" value="${esc(l.valorEstimado)}"></label><label>Próximo contacto<input id="d-proximoContacto" type="date" value="${esc(l.proximoContacto)}"></label>
-  <label class="w">Perfil / notas del inversionista<textarea id="d-notas" rows="3">${esc(l.notas)}</textarea></label><label class="w">Motivo de pérdida<input id="d-motivoPerdida" value="${esc(l.motivoPerdida)}"></label></div>
+  <h2 style="margin-top:18px">Propuestas enviadas</h2><div id="d-props"></div>
+  <details class="card" style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">+ Nueva propuesta</summary><div class="f"><label class="w">Título / alcance<input id="np-titulo" placeholder="Ej.: Coordinación BIM torre 2 · 4.500 m²"></label><label>N.º<input id="np-numero" value="${consecutivo('COT', ALL.flatMap(x => x.propuestas.map(p => p.numero)))}"></label><label>Valor antes de IVA (COP)<input id="np-valor" type="number"></label>
+    <label>Fecha de envío<input id="np-fecha" type="date" value="${today()}"></label><label>Vigente hasta<input id="np-vigencia" type="date" value="${new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)}"></label><label>Estado<select id="np-estado">${PE.map(([a, b]) => `<option value="${a}" ${a === 'enviada' ? 'selected' : ''}>${b}</option>`).join('')}</select></label><label>Link del PDF (opcional)<input id="np-link" placeholder="https://…"></label></div><button class="btn p" id="np-add">Agregar propuesta</button></details>
+  <h2 style="margin-top:18px">Información</h2><div class="f">${CAMPOS.map(c => campo(l, c)).join('')}</div>
   <div class="acts"><button class="btn p" id="save">Guardar</button><button class="btn" id="del" style="margin-left:auto;color:var(--crit)">Eliminar</button></div>
   <h2 style="margin-top:18px">Bitácora de contacto</h2>
-  <div class="f" style="grid-template-columns:140px 1fr auto;align-items:end"><label>Tipo<select id="a-tipo"><option>llamada</option><option>whatsapp</option><option>correo</option><option>reunión</option><option>visita</option><option>nota</option></select></label><label>Qué pasó<input id="a-texto" placeholder="Resumen de la conversación"></label><button class="btn" id="a-add">Agregar</button></div><div class="tl" id="tl"></div>`;
+  <div class="f" style="grid-template-columns:140px 1fr auto;align-items:end"><label>Tipo<select id="a-tipo"><option>llamada</option><option>whatsapp</option><option>correo</option><option>reunión</option><option>visita</option><option>cotización</option><option>nota</option></select></label><label>Qué pasó<input id="a-texto" placeholder="Resumen de la conversación"></label><button class="btn" id="a-add">Agregar</button></div><div class="tl" id="tl"></div>`;
   $('#dr').classList.add('on'); $('#dr .x').onclick = closeDr;
-  $$('#dr [data-log]').forEach(a => a.onclick = () => log(id, a.dataset.log, 'Contacto iniciado desde el CRM'));
-  $('#save').onclick = async () => { const d = {}; ['nombre', 'documento', 'celular', 'correo', 'ciudad', 'proyecto', 'etapa', 'responsable', 'proximoContacto', 'notas', 'motivoPerdida'].forEach(k => d[k] = $('#d-' + k).value); d.valorEstimado = +$('#d-valorEstimado').value || 0; d.actualizado = F.serverTimestamp(); if (d.etapa !== (l.etapa || 'nuevo')) await log(id, 'etapa', `Etapa: ${EN[l.etapa] || 'Nuevo'} → ${EN[d.etapa]}`); await F.updateDoc(F.doc(db, 'leads', id), d); closeDr(); };
-  $('#del').onclick = async () => { if (confirm('¿Eliminar este lead de forma permanente?')) { await F.deleteDoc(F.doc(db, 'leads', id)); closeDr(); } };
-  $('#a-add').onclick = async () => { const t = $('#a-texto').value.trim(); if (!t) return; await log(id, $('#a-tipo').value, t); $('#a-texto').value = ''; };
-  unsubAct?.(); unsubAct = F.onSnapshot(F.query(F.collection(db, 'leads', id, 'actividades'), F.orderBy('fecha', 'desc')), s => $('#tl').innerHTML = s.docs.map(d => { const a = d.data(); return `<div><b>${esc(a.tipo)}</b> · ${esc(a.texto)}<small>${a.fecha?.toDate?.().toLocaleString('es-CO') || ''} · ${esc(a.autor)}</small></div>`; }).join('') || '<small>Sin actividad registrada.</small>');
+  $$('#dr [data-log]').forEach(a => a.onclick = () => logL(l, a.dataset.log, 'Contacto iniciado desde el CRM'));
+  $('#d-etapa').onchange = e => e.target.dataset.dirty = 1;
+  $('#save').onclick = async () => { const c0 = byK(k) || l, d = {}; CAMPOS.forEach(([c, , t]) => d[c] = t === 'number' ? (+$('#d-' + c).value || 0) : $('#d-' + c).value); d.actualizado = F.serverTimestamp(); if (d.etapa === 'ganado' && !c0.ganadoEl) d.ganadoEl = today();
+    if (d.etapa !== (c0.etapa || 'nuevo')) await logL(l, 'etapa', `Etapa: ${EN[c0.etapa] || 'Nuevo'} → ${EN[d.etapa]}`); if (d.interes !== c0.interes) await logL(l, 'nota', `Interés: ${c0.interes} → ${d.interes}`); await upd(l, d); closeDr(); };
+  $('#del').onclick = async () => { if (confirm('¿Eliminar este contacto de forma permanente? Se pierden también sus propuestas y facturas.')) { await F.deleteDoc(F.doc(db, l._col, l.id)); closeDr(); } };
+  $('#a-add').onclick = async () => { const t = $('#a-texto').value.trim(); if (!t) return; await logL(l, $('#a-tipo').value, t); $('#a-texto').value = ''; };
+  $('#np-add').onclick = async () => { const p = { id: uid8(), numero: $('#np-numero').value.trim(), titulo: $('#np-titulo').value.trim(), valor: +$('#np-valor').value || 0, fecha: $('#np-fecha').value, vigencia: $('#np-vigencia').value, estado: $('#np-estado').value, link: $('#np-link').value.trim(), facturas: [] };
+    if (!p.titulo || !p.valor) return alert('Falta el título o el valor de la propuesta.'); const cur = byK(k); await saveProps(cur, [...cur.propuestas, p], `Propuesta ${p.numero} «${p.titulo}» por ${money(p.valor)} · ${PEN[p.estado]}`); await autoEtapa(cur, p.estado); };
+  renderProps();
+  unsubAct?.(); unsubAct = F.onSnapshot(F.query(F.collection(db, l._col, l.id, 'actividades'), F.orderBy('fecha', 'desc')), s => $('#tl').innerHTML = s.docs.map(d => { const a = d.data(); return `<div><b>${esc(a.tipo)}</b> · ${esc(a.texto)}<small>${a.fecha?.toDate?.().toLocaleString('es-CO') || ''} · ${esc(a.autor)}</small></div>`; }).join('') || '<small>Sin actividad registrada.</small>');
 }
-const closeDr = () => { $('#dr').classList.remove('on'); unsubAct?.(); };
-$('#nuevo').onclick = async () => { const nombre = prompt('Nombre del lead'); if (!nombre) return; const r = await F.addDoc(F.collection(db, 'leads'), { nombre, etapa: 'nuevo', origen: 'Manual', proyecto: '', creado: F.serverTimestamp() }); setTimeout(() => openLead(r.id), 600); };
-$('#csv').onclick = () => { const cols = ['nombre', 'celular', 'correo', 'documento', 'ciudad', 'proyecto', 'monto', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'notas', 'mensaje']; const rows = [cols.join(','), ...filtered().map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' })); a.download = `leads-${today()}.csv`; a.click(); };
-
-// ---------- Coordinación y diseño (línea BIM)
-const BE = [['nuevo', 'Nuevo'], ['contactado', 'Contactado'], ['reunion', 'Reunión / levantamiento'], ['propuesta', 'Propuesta enviada'], ['negociacion', 'Negociación'], ['ganado', 'Ganado'], ['perdido', 'Perdido']], BEN = Object.fromEntries(BE);
-const SERV = ['Diseño arquitectónico', 'Diseño estructural', 'Diseño MEP', 'Coordinación BIM', 'Modelado BIM / as-built', 'Cantidades y presupuesto 5D', 'Gestión de activos / facility', 'Escaneo y nube de puntos', 'Otro'];
-let bim = [];
-function startBim() {
-  F.onSnapshot(F.query(F.collection(db, 'leadsBim'), F.orderBy('creado', 'desc')), q => { bim = q.docs.map(d => ({ id: d.id, ...d.data(), creado: d.data().creado?.toDate?.() })); renderBim(); }, e => console.error(e));
-  $('#b-fs').innerHTML += SERV.map(x => `<option>${x}</option>`).join(''); $('#b-fe').innerHTML += BE.map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
-  ['#b-q', '#b-fs', '#b-fe'].forEach(x => $(x).oninput = renderBim);
-  $('#b-nuevo').onclick = async () => { const empresa = prompt('Empresa o cliente'); if (!empresa) return; const r = await F.addDoc(F.collection(db, 'leadsBim'), { empresa, etapa: 'nuevo', origen: 'Manual', servicio: '', creado: F.serverTimestamp() }); setTimeout(() => openBim(r.id), 600); };
-  $('#b-form').onclick = () => { const u = location.origin + location.pathname.replace(/index\.html$/, '') + 'bim.html'; navigator.clipboard?.writeText(u); alert('Formulario público para tu web o redes:\n' + u + '\n\n(copiado al portapapeles)'); };
-  $('#b-csv').onclick = () => { const cols = ['empresa', 'contacto', 'cargo', 'celular', 'correo', 'servicio', 'proyecto', 'tipo', 'ciudad', 'area', 'disciplinas', 'etapa', 'valor', 'responsable', 'proximoContacto', 'origen', 'mensaje', 'notas']; const rows = [cols.join(','), ...filtBim().map(l => cols.map(c => `"${String(l[c] ?? '').replace(/"/g, '""')}"`).join(','))]; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' })); a.download = `bim-${today()}.csv`; a.click(); };
+const closeDr = () => { $('#dr').classList.remove('on'); unsubAct?.(); openK = ''; };
+async function saveProps(l, propuestas, texto) { await upd(l, { propuestas, actualizado: F.serverTimestamp() }); if (texto) await logL(l, 'cotización', texto); }
+// Mover la etapa del contacto según lo que pasa con la propuesta
+async function autoEtapa(l, est) {
+  const e = l.etapa || 'nuevo', to = est === 'aprobada' && !['ganado', 'separo'].includes(e) ? 'ganado' : ['enviada', 'negociacion'].includes(est) && ['nuevo', 'contactado', 'calificado', 'reunion', 'propuesta'].includes(e) ? (est === 'negociacion' ? 'negociacion' : 'propuesta') : '';
+  if (to && to !== e) await setEtapa(l.k, to);
 }
-const filtBim = () => { const q = $('#b-q').value.toLowerCase(), sv = $('#b-fs').value, e = $('#b-fe').value; return bim.filter(l => (!sv || l.servicio === sv) && (!e || (l.etapa || 'nuevo') === e) && (!q || [l.empresa, l.contacto, l.proyecto, l.correo].join(' ').toLowerCase().includes(q))); };
-function renderBim() {
-  const open_ = bim.filter(l => !['ganado', 'perdido'].includes(l.etapa)), won = bim.filter(l => l.etapa === 'ganado'), cerr = bim.filter(l => ['ganado', 'perdido'].includes(l.etapa));
-  const sum = a => a.reduce((s, l) => s + (+l.valor || 0), 0), venc = open_.filter(l => l.proximoContacto && l.proximoContacto <= today());
-  $('#b-kpis').innerHTML = [['Oportunidades abiertas', open_.length, ''], ['Valor en negociación', money(sum(open_)), 'suma de lo cotizado'], ['Ganadas (12 meses)', won.filter(l => l.creado > Date.now() - 365 * 864e5).length, money(sum(won.filter(l => l.creado > Date.now() - 365 * 864e5)))],
-    ['Tasa de cierre', cerr.length ? Math.round(won.length / cerr.length * 100) + ' %' : '—', `${won.length} de ${cerr.length} cerradas`], ['Seguimientos vencidos', venc.length, 'próximo contacto ≤ hoy'], ['m² en gestión', open_.reduce((s, l) => s + (+l.area || 0), 0).toLocaleString('es-CO'), 'área de los proyectos abiertos']]
-    .map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${c}</span></div>`).join('');
-  hbars('#b-etapa', BE.map(([k, v]) => [v, bim.filter(l => (l.etapa || 'nuevo') === k).length]));
-  hbars('#b-serv', SERV.map(sv => [sv, open_.filter(l => l.servicio === sv).length, `${open_.filter(l => l.servicio === sv).length} abiertas · ${money(sum(open_.filter(l => l.servicio === sv)))}`]).filter(r => r[1]));
-  hbars('#b-orig', count(bim, l => l.origen));
-  const months = [...Array(12)].map((_, i) => { const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); d.setMonth(d.getMonth() - 11 + i); return d; });
-  const mv = months.map((d, i) => sum(won.filter(l => { const t = l.ganadoEl ? new Date(l.ganadoEl + 'T12:00') : l.creado; return t >= d && t < (months[i + 1] || Infinity); }))), mx = Math.max(1, ...mv);
-  $('#b-mes').innerHTML = `<div class="vb">${mv.map((v, i) => `<div data-t="${months[i].toLocaleDateString('es-CO', { month: 'short', year: '2-digit' })}: ${money(v)}"><i style="height:${v / mx * 100}%"></i></div>`).join('')}</div><div class="vbx">${months.map((d, i) => `<span>${i % 2 ? '' : d.toLocaleDateString('es-CO', { month: 'short' })}</span>`).join('')}</div>`;
-  const r = filtBim(); $('#b-none').classList.toggle('hide', !!bim.length);
-  $('#b-tb').innerHTML = r.map(l => `<tr data-id="${l.id}"><td><b>${esc(l.empresa)}</b><br><small style="color:var(--ink2)">${esc(l.contacto)}${l.cargo ? ' · ' + esc(l.cargo) : ''}</small></td><td>${esc(l.servicio)}</td><td>${esc(l.proyecto)}${l.tipo ? `<br><small style="color:var(--ink2)">${esc(l.tipo)}</small>` : ''}</td><td class="num">${l.area ? (+l.area).toLocaleString('es-CO') : '—'}</td><td class="num">${l.valor ? money(l.valor) : '—'}</td><td><span class="chip ${esc(l.etapa)}">${esc(BEN[l.etapa] || l.etapa)}</span></td><td>${l.proximoContacto ? fdate(l.proximoContacto + 'T12:00') : '—'}</td><td>${fdate(l.creado)}</td></tr>`).join('');
-  $$('#b-tb tr').forEach(t => t.onclick = () => openBim(t.dataset.id));
-  $('#b-kan').innerHTML = BE.map(([k, v]) => { const a = r.filter(l => (l.etapa || 'nuevo') === k); return `<div class="col" data-e="${k}"><h3>${v}<span>${a.length}${sum(a) ? ' · ' + money(sum(a)) : ''}</span></h3>${a.map(l => `<div class="lc" draggable="true" data-id="${l.id}"><b>${esc(l.empresa)}</b><small>${esc(l.servicio || 'Sin servicio')}${l.proyecto ? ' · ' + esc(l.proyecto) : ''}</small><small>${l.valor ? money(l.valor) : ''} ${l.area ? '· ' + (+l.area).toLocaleString('es-CO') + ' m²' : ''}</small></div>`).join('')}</div>`; }).join('');
-  $$('#b-kan .lc').forEach(c => { c.ondragstart = e => e.dataTransfer.setData('bid', c.dataset.id); c.onclick = () => openBim(c.dataset.id); });
-  $$('#b-kan .col').forEach(c => { c.ondragover = e => { e.preventDefault(); c.classList.add('over'); }; c.ondragleave = () => c.classList.remove('over'); c.ondrop = async e => { c.classList.remove('over'); const id = e.dataTransfer.getData('bid'), l = bim.find(x => x.id === id); if (!l || l.etapa === c.dataset.e) return; await F.updateDoc(F.doc(db, 'leadsBim', id), { etapa: c.dataset.e, ...(c.dataset.e === 'ganado' ? { ganadoEl: today() } : {}), actualizado: F.serverTimestamp() }); logB(id, 'etapa', `Etapa: ${BEN[l.etapa] || l.etapa} → ${BEN[c.dataset.e]}`); }; });
+function renderProps() {
+  const l = byK(openK); if (!l || !$('#d-props')) return; const ps = l.propuestas, vivas = ps.flatMap(p => (p.facturas || []).filter(f => !f.anulada));
+  const se = $('#d-etapa'); if (se && !se.dataset.dirty) se.value = l.etapa || 'nuevo';   // la propuesta puede mover la etapa mientras la ficha está abierta
+  $('#d-res').innerHTML = [['Propuestas', ps.length, money(ps.reduce((s, p) => s + (+p.valor || 0), 0))], ['Aprobado', money(ps.filter(p => p.estado === 'aprobada').reduce((s, p) => s + (+p.valor || 0), 0)), 'antes de IVA'], ['Facturado', money(vivas.reduce((s, f) => s + fTotal(f), 0)), vivas.length + ' facturas'], ['Saldo por cobrar', money(vivas.reduce((s, f) => s + fTotal(f) - fPag(f), 0)), money(vivas.reduce((s, f) => s + fPag(f), 0)) + ' pagado']]
+    .map(([a, b, c]) => `<div class="card kpi"><small>${a}</small><b>${esc(b)}</b><span>${esc(c)}</span></div>`).join('');
+  $('#d-props').innerHTML = ps.length ? ps.map((p, i) => `<div class="card pp"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="flex:1">${esc(p.numero)} · ${esc(p.titulo)}</b><span class="chip ${pChip(p)}">${esc(pLabel(p))}</span></div>
+    <small style="color:var(--ink2)">${money(p.valor)} antes de IVA · enviada ${p.fecha ? fdate(p.fecha + 'T12:00') : '—'} · vigente hasta ${p.vigencia ? fdate(p.vigencia + 'T12:00') : '—'}${p.link ? ` · <a href="${esc(p.link)}" target="_blank" rel="noopener">ver PDF</a>` : ''} · facturado ${money(facturadoP(p))} de ${money(p.valor)}</small>
+    <div class="acts"><select data-pe="${i}">${PE.map(([a, b]) => `<option value="${a}" ${a === p.estado ? 'selected' : ''}>${b}</option>`).join('')}</select><button class="btn s" data-fx="${i}">+ Factura</button><button class="btn s" data-prm="${i}" style="margin-left:auto">✕</button></div>
+    ${(p.facturas || []).length ? `<table class="ft"><thead><tr><th>Factura</th><th>Fecha</th><th>Vence</th><th class="num">Total</th><th class="num">Saldo</th><th>Estado</th><th></th></tr></thead><tbody>${p.facturas.map((f, j) => `<tr style="cursor:default"><td>${esc(f.numero)}</td><td>${fdate(f.fecha + 'T12:00')}</td><td>${f.vence ? fdate(f.vence + 'T12:00') : '—'}</td><td class="num">${money(fTotal(f))}</td><td class="num">${f.anulada ? '—' : money(fTotal(f) - fPag(f))}</td><td><span class="chip ${fEst(f)[0]}">${fEst(f)[1]}</span></td><td style="white-space:nowrap">${f.anulada || fPag(f) >= fTotal(f) ? '' : `<button class="btn s" data-pay="${i}.${j}">Registrar pago</button> `}${f.anulada ? '' : `<button class="btn s" data-anu="${i}.${j}">Anular</button>`}</td></tr>`).join('')}</tbody></table>` : ''}
+    <div class="f hide" id="fx-${i}"><label>N.º factura<input id="fx-num-${i}" value="${consecutivo('FV', facturas().map(x => x.f.numero))}"></label><label>Concepto<input id="fx-con-${i}" value="${esc(p.titulo)}"></label><label>Subtotal (COP)<input id="fx-sub-${i}" type="number" value="${Math.max(0, (+p.valor || 0) - facturadoP(p))}"></label><label>IVA (%)<input id="fx-iva-${i}" type="number" value="19"></label><label>Fecha<input id="fx-fec-${i}" type="date" value="${today()}"></label><label>Vence<input id="fx-ven-${i}" type="date" value="${new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10)}"></label><button class="btn p" data-fsave="${i}">Crear factura</button></div></div>`).join('') : '<div class="empty" style="padding:14px">Aún no se le ha enviado ninguna propuesta.</div>';
+  const cp = () => structuredClone(byK(openK).propuestas);
+  $$('#d-props [data-pe]').forEach(s => s.onchange = async () => { const a = cp(), p = a[+s.dataset.pe], old = p.estado; p.estado = s.value; await saveProps(l, a, `Propuesta ${p.numero}: ${PEN[old]} → ${PEN[p.estado]}`); await autoEtapa(byK(openK), p.estado); });
+  $$('#d-props [data-fx]').forEach(b => b.onclick = () => $('#fx-' + b.dataset.fx).classList.toggle('hide'));
+  $$('#d-props [data-prm]').forEach(b => b.onclick = async () => { const a = cp(), p = a[+b.dataset.prm]; if ((p.facturas || []).length) return alert('Esta propuesta ya tiene facturas. Anúlalas en vez de borrar la propuesta.'); if (!confirm(`¿Quitar la propuesta ${p.numero}?`)) return; a.splice(+b.dataset.prm, 1); await saveProps(l, a, `Propuesta ${p.numero} eliminada`); });
+  $$('#d-props [data-fsave]').forEach(b => b.onclick = async () => { const i = +b.dataset.fsave, a = cp(), p = a[i], g = s => $(`#fx-${s}-${i}`).value;
+    const f = { id: uid8(), numero: g('num').trim(), concepto: g('con').trim(), subtotal: +g('sub') || 0, iva: +g('iva') || 0, fecha: g('fec'), vence: g('ven'), abonos: [] };
+    if (!f.numero || !f.subtotal || !f.fecha) return alert('Falta el número, el subtotal o la fecha.'); if (facturas().some(x => x.f.numero === f.numero)) return alert(`La factura ${f.numero} ya existe.`);
+    p.facturas = [...(p.facturas || []), f]; await saveProps(l, a, `Factura ${f.numero} por ${money(fTotal(f))} (propuesta ${p.numero})`); });
+  $$('#d-props [data-pay]').forEach(b => b.onclick = async () => { const [i, j] = b.dataset.pay.split('.').map(Number), a = cp(), f = a[i].facturas[j], saldo = fTotal(f) - fPag(f);
+    const v = prompt(`Valor recibido para ${f.numero} (saldo ${money(saldo)})`, saldo); if (v === null) return; const val = +String(v).replace(/[^\d.]/g, ''); if (!val) return;
+    const fe = prompt('Fecha del pago (AAAA-MM-DD)', today()); if (!/^\d{4}-\d{2}-\d{2}$/.test(fe || '')) return alert('Fecha no válida.');
+    f.abonos = [...(f.abonos || []), { valor: val, fecha: fe }]; await saveProps(l, a, `Pago de ${money(val)} a la factura ${f.numero}${val < saldo ? ` · queda ${money(saldo - val)}` : ' · pagada'}`); });
+  $$('#d-props [data-anu]').forEach(b => b.onclick = async () => { const [i, j] = b.dataset.anu.split('.').map(Number), a = cp(), f = a[i].facturas[j]; if (!confirm(`¿Anular la factura ${f.numero}? Queda registrada como anulada.`)) return; f.anulada = true; await saveProps(l, a, `Factura ${f.numero} anulada`); });
 }
-const logB = (id, tipo, texto) => F.addDoc(F.collection(db, 'leadsBim', id, 'actividades'), { tipo, texto, fecha: F.serverTimestamp(), autor: me.email });
-function openBim(id) {
-  const l = bim.find(x => x.id === id); if (!l) return; const w = tel(l.celular), FB = ['empresa', 'contacto', 'cargo', 'celular', 'correo', 'nit', 'ciudad', 'proyecto', 'tipo', 'area', 'disciplinas', 'software', 'valor', 'responsable', 'proximoContacto', 'notas', 'motivoPerdida'];
-  $('#dr').innerHTML = `<button class="btn s x">✕</button><h2>${esc(l.empresa)}</h2><small style="color:var(--ink2)">${esc(l.servicio || 'Sin servicio')} · llegó ${fdate(l.creado)} por ${esc(l.origen)}</small>
-  <div class="acts">${w ? `<a class="btn s" target="_blank" rel="noopener" href="https://wa.me/${w}" data-log="whatsapp">WhatsApp</a><a class="btn s" href="tel:+${w}" data-log="llamada">Llamar</a>` : ''}${l.correo ? `<a class="btn s" href="mailto:${esc(l.correo)}" data-log="correo">Correo</a>` : ''}</div>
-  ${l.mensaje ? `<div class="card" style="background:#f7f6f2"><small style="color:var(--ink2)">Mensaje del formulario</small><br>${esc(l.mensaje)}</div>` : ''}
-  <div class="f"><label>Empresa / cliente<input id="b-empresa" value="${esc(l.empresa)}"></label><label>NIT / documento<input id="b-nit" value="${esc(l.nit)}"></label>
-  <label>Contacto<input id="b-contacto" value="${esc(l.contacto)}"></label><label>Cargo<input id="b-cargo" value="${esc(l.cargo)}"></label>
-  <label>Celular<input id="b-celular" value="${esc(l.celular)}"></label><label>Correo<input id="b-correo" value="${esc(l.correo)}"></label>
-  <label>Servicio<select id="b-servicio">${['', ...SERV].map(x => `<option ${x === (l.servicio || '') ? 'selected' : ''}>${x}</option>`).join('')}</select></label><label>Etapa<select id="b-etapa">${BE.map(([k, v]) => `<option value="${k}" ${k === (l.etapa || 'nuevo') ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
-  <label>Proyecto<input id="b-proyecto" value="${esc(l.proyecto)}"></label><label>Tipo (vivienda, industrial, salud…)<input id="b-tipo" value="${esc(l.tipo)}"></label>
-  <label>Ciudad<input id="b-ciudad" value="${esc(l.ciudad)}"></label><label>Área (m²)<input id="b-area" type="number" value="${esc(l.area)}"></label>
-  <label>Disciplinas (ARQ, EST, MEP…)<input id="b-disciplinas" value="${esc(l.disciplinas)}"></label><label>Software / entregables<input id="b-software" value="${esc(l.software)}" placeholder="Revit, IFC, Navisworks…"></label>
-  <label>Valor cotizado (COP)<input id="b-valor" type="number" value="${esc(l.valor)}"></label><label>Responsable<input id="b-responsable" value="${esc(l.responsable)}"></label>
-  <label>Próximo contacto<input id="b-proximoContacto" type="date" value="${esc(l.proximoContacto)}"></label><label>Motivo de pérdida<input id="b-motivoPerdida" value="${esc(l.motivoPerdida)}"></label>
-  <label class="w">Notas<textarea id="b-notas" rows="3">${esc(l.notas)}</textarea></label></div>
-  <div class="acts"><button class="btn p" id="b-save">Guardar</button><button class="btn" id="b-del" style="margin-left:auto;color:var(--crit)">Eliminar</button></div>
-  <h2 style="margin-top:18px">Bitácora</h2><div class="f" style="grid-template-columns:140px 1fr auto;align-items:end"><label>Tipo<select id="ba-tipo"><option>llamada</option><option>whatsapp</option><option>correo</option><option>reunión</option><option>visita</option><option>cotización</option><option>nota</option></select></label><label>Qué pasó<input id="ba-texto"></label><button class="btn" id="ba-add">Agregar</button></div><div class="tl" id="b-tl"></div>`;
-  $('#dr').classList.add('on'); $('#dr .x').onclick = closeDr; $$('#dr [data-log]').forEach(a => a.onclick = () => logB(id, a.dataset.log, 'Contacto iniciado desde el CRM'));
-  $('#b-save').onclick = async () => { const d = {}; FB.forEach(k => d[k] = $('#b-' + k).value); d.servicio = $('#b-servicio').value; d.etapa = $('#b-etapa').value; d.valor = +d.valor || 0; d.area = +d.area || 0; d.actualizado = F.serverTimestamp(); if (d.etapa === 'ganado' && !l.ganadoEl) d.ganadoEl = today(); if (d.etapa !== (l.etapa || 'nuevo')) await logB(id, 'etapa', `Etapa: ${BEN[l.etapa] || 'Nuevo'} → ${BEN[d.etapa]}`); await F.updateDoc(F.doc(db, 'leadsBim', id), d); closeDr(); };
-  $('#b-del').onclick = async () => { if (confirm('¿Eliminar esta oportunidad?')) { await F.deleteDoc(F.doc(db, 'leadsBim', id)); closeDr(); } };
-  $('#ba-add').onclick = async () => { const t = $('#ba-texto').value.trim(); if (!t) return; await logB(id, $('#ba-tipo').value, t); $('#ba-texto').value = ''; };
-  unsubAct?.(); unsubAct = F.onSnapshot(F.query(F.collection(db, 'leadsBim', id, 'actividades'), F.orderBy('fecha', 'desc')), q => $('#b-tl').innerHTML = q.docs.map(d => { const a = d.data(); return `<div><b>${esc(a.tipo)}</b> · ${esc(a.texto)}<small>${a.fecha?.toDate?.().toLocaleString('es-CO') || ''} · ${esc(a.autor)}</small></div>`; }).join('') || '<small>Sin actividad registrada.</small>');
-}
+$('#nuevo').onclick = async () => { const nombre = prompt('Nombre del contacto'); if (!nombre) return; const r = await F.addDoc(F.collection(db, 'leads'), { nombre, etapa: 'nuevo', origen: 'Manual', proyecto: '', creado: F.serverTimestamp() }); setTimeout(() => openLead('leads/' + r.id), 800); };
+$('#b-form').onclick = () => { const u = location.origin + location.pathname.replace(/index\.html$/, '') + 'bim.html'; navigator.clipboard?.writeText(u); alert('Formulario público BIM para tu web o redes:\n' + u + '\n\n(copiado al portapapeles)'); };
+$('#csv').onclick = () => { const cols = ['nombre', 'empresa', 'cargo', 'celular', 'correo', 'documento', 'ciudad', 'interes', 'proyecto', 'servicio', 'tipo', 'monto', 'area', 'etapa', 'responsable', 'valorEstimado', 'proximoContacto', 'origen', 'utm', 'notas', 'mensaje'];
+  csvDown(`leads-${today()}.csv`, [...cols, 'propuestas', 'facturado'], filtered().map(l => [...cols.map(c => l[c]), l.propuestas.length, facturadoL(l)])); };
 
 // ---------- Plantillas de recordatorio
 let TPL = {};

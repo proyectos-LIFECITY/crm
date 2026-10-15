@@ -50,3 +50,10 @@ th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2
 .chip.inversionista::before{background:#1baf7a}code{background:#eceae4;padding:1px 6px;border-radius:5px;font-size:12px}textarea{font-family:inherit}
 
 .chip.reunion::before,.chip.contactado::before,.chip.calificado::before{background:#eda100}.chip.propuesta::before,.chip.negociacion::before{background:#4a3aa7}
+
+/* segmentación, ficha y facturación */
+.seg{cursor:pointer;transition:.15s}.seg:hover{border-color:#bdbab0}.seg.on{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.kpis.mini{grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:14px 0 4px}.kpis.mini .card{padding:10px 12px}.kpis.mini b{font-size:1.1rem}
+.pp{margin-bottom:10px;padding:14px}.pp select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:12px}
+.ft{margin-top:8px;font-size:12px}.ft th,.ft td{padding:6px 8px}tfoot th{text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
+#f-car .hb{grid-template-columns:minmax(90px,150px) 1fr 120px}
